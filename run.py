@@ -3,14 +3,14 @@
 app = create_app()
 
 if __name__ == '__main__':
-    app.run(port=5004)
+    app.run(port=5003)
 
 
 # To run the application using Flask's built-in server, use the command:
 
 """
 // Command to run the Flask application:-
-// Start the virtual environment and run the Flask app on port 5004:
+// Start the virtual environment and run the Flask app on port 5003:
 
 # Activate the virtual environment
 .\venv\Scripts\activate  
@@ -24,8 +24,8 @@ echo $env:FLASK_APP
 
 
 
-# Run the Flask app on port 5004
-flask run --port 5004 
+# Run the Flask app on port 5003
+flask run --port 5003
 
 
 
