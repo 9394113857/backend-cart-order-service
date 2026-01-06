@@ -1,0 +1,17 @@
+# check current branch
+git branch
+
+# create & switch to feature branch
+git checkout -b feature/cart-checkout-backend
+
+# verify branch
+git branch
+
+# add all files
+git add .
+
+# commit
+git commit -m "CART-CHECKOUT: Initial cart & checkout backend with JWT and orders"
+
+# push upstream (IMPORTANT – first time only)
+git push -u origin feature/cart-checkout-backend
