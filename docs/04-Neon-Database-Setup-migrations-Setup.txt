@@ -15,10 +15,9 @@ STEP 1️⃣ : SET DATABASE_URL (PowerShell ONLY)
 # This overrides SQLite for THIS terminal session only
 
  
-# New Database Created at:  5-1-26
+# New Database Created at:  7-1-26
 # ✅ FINAL CURRENT CORRECT COMMAND (PowerShell):-
-$env:DATABASE_URL="postgresql+psycopg://neondb_owner:npg_EvfIxt5VdU4b@ep-blue-moon-a1jdsww9-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
-
+$env:DATABASE_URL="postgresql+psycopg://neondb_owner:npg_n2Ge9gAfrXUP@ep-curly-water-a179zhvy-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 
 ----------------------------------------------------
 STEP 2️⃣ : INSTALL POSTGRES DRIVER (ONE-TIME)
