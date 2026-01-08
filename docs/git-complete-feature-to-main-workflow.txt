@@ -135,3 +135,17 @@ IMPORTANT RULES (READ ALWAYS)
 =====================================================================
 END OF DOCUMENT
 =====================================================================
+
+✅ Your move now
+Create branch (already done):
+ feature/orders-flow-v1
+
+
+Apply only these model changes
+
+
+Run:
+flask db migrate -m "orders flow v1"
+flask db upgrade
+
+We’re building this the right way 🚀
