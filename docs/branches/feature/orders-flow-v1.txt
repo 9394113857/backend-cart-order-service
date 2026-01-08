@@ -4,3 +4,4 @@ app/models/cart_item.py (KEEP)
 🔥 NEW: app/models/order.py
 🔥 NEW: app/models/order_item.py
 
+git commit --allow-empty -m "Orders Flow: Cart + Order service critical fix (add Order & OrderItem models)"
