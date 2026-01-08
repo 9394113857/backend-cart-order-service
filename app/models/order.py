@@ -6,7 +6,16 @@ class Order(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, nullable=False)
+
     contact = db.Column(db.String(20), nullable=False)
     address = db.Column(db.String(500), nullable=False)
+
     total_price = db.Column(db.Float, nullable=False)
+
+    # 🔥 ORDER STATE
+    status = db.Column(
+        db.String(20),
+        default="placed"  # placed | paid | shipped | delivered | cancelled
+    )
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

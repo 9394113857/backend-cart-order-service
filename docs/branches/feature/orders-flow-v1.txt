@@ -1,0 +1,6 @@
+Orders-Flow:-
+🛒 CART + ORDER SERVICE (CRITICAL FIX)
+app/models/cart_item.py (KEEP)
+🔥 NEW: app/models/order.py
+🔥 NEW: app/models/order_item.py
+
