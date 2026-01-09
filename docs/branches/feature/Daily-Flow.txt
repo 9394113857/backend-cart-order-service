@@ -7,3 +7,9 @@ If you want, next I can:
 📄 Draft CHANGELOG.md (v1.0.0)
 
 Just say the word 😎
+
+=======================================
+
+👉 Next step:
+“Implement GET /api/orders (backend + Angular Orders page)”
+
