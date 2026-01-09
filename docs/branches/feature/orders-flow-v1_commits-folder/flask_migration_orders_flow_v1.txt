@@ -1,0 +1,77 @@
+# =====================================================
+# FILE: flask_migration_orders_flow_v1.txt
+# PURPOSE: Apply DB schema changes safely using Flask-Migrate
+# PROJECT: backend-cart-order-service
+# CONTEXT: Orders Flow v1 (orders + order_items)
+# =====================================================
+
+# -----------------------------------------------------
+# STEP 0: Go to project root
+# -----------------------------------------------------
+cd E:\ecommerce-platform\backend-cart-order-service
+
+# -----------------------------------------------------
+# STEP 1: Activate virtual environment
+# -----------------------------------------------------
+venv\Scripts\activate
+
+# -----------------------------------------------------
+# STEP 2: (Optional) Check current DB revision
+# Helps confirm DB state before migration
+# -----------------------------------------------------
+flask db current
+
+# -----------------------------------------------------
+# STEP 3: Generate migration from models
+# Run ONLY when models change
+# -----------------------------------------------------
+flask db migrate -m "orders flow v1"
+
+# -----------------------------------------------------
+# STEP 4: Apply migration to database
+# THIS ACTUALLY CREATES / UPDATES TABLES
+# -----------------------------------------------------
+flask db upgrade
+
+# -----------------------------------------------------
+# STEP 5: Verify tables (sanity check)
+# -----------------------------------------------------
+flask shell
+# Inside Python shell:
+# >>> from sqlalchemy import inspect
+# >>> from app.extensions import db
+# >>> 
+# >>> inspector = inspect(db.engine)
+# >>> print(inspector.get_table_names())
+
+# Expected:
+# ['alembic_version', 'cart_items', 'orders', 'order_items']
+# >>> exit()
+
+# -----------------------------------------------------
+# STEP 6: Start service locally (verify)
+# -----------------------------------------------------
+flask run --port 5003
+
+# -----------------------------------------------------
+# STEP 7: Commit migration (IMPORTANT)
+# -----------------------------------------------------
+git status
+git add migrations
+git commit -m "feat(cart): add orders + order_items schema (orders flow v1)"
+
+# -----------------------------------------------------
+# STEP 8: Push feature branch
+# -----------------------------------------------------
+git push -u origin feature/orders-flow-v1
+
+# -----------------------------------------------------
+# STEP 9: AFTER MERGE TO MAIN (Render / Neon)
+# -----------------------------------------------------
+# - Set DATABASE_URL in Render
+# - Deploy service
+# - Run ONCE in Render shell:
+#   flask db upgrade
+#
+# DO NOT rerun migrate unless schema changes again
+# =====================================================
