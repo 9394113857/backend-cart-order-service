@@ -1,5 +1,6 @@
 from app.extensions import db
 
+
 class OrderItem(db.Model):
     __tablename__ = "order_items"
 
@@ -12,3 +13,6 @@ class OrderItem(db.Model):
     price = db.Column(db.Float, nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
     image = db.Column(db.String(500))
+
+    def __repr__(self):
+        return f"<OrderItem order={self.order_id} product={self.product_id}>"

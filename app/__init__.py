@@ -8,39 +8,22 @@ from .config import Config
 
 
 def create_app():
-    """
-    Cart + Checkout Service Factory
-    Port: 5003
-    """
-
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    # ------------------------------------
-    # CORS (Angular / Netlify / Local)
-    # ------------------------------------
     CORS(
         app,
         resources={r"/api/*": {"origins": "*"}},
         supports_credentials=True
     )
 
-    # ------------------------------------
-    # Extensions
-    # ------------------------------------
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
 
-    # ------------------------------------
-    # Blueprints
-    # ------------------------------------
     app.register_blueprint(cart_bp, url_prefix="/api/cart")
     app.register_blueprint(checkout_bp, url_prefix="/api/checkout")
 
-    # ------------------------------------
-    # Health Check (VERY IMPORTANT)
-    # ------------------------------------
     @app.get("/")
     def health():
         return jsonify({"status": "Cart-Order-Service UP"}), 200

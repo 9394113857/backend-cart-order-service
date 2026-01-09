@@ -9,10 +9,6 @@ cart_bp = Blueprint("cart", __name__)
 @cart_bp.post("/")
 @jwt_required()
 def add_to_cart():
-    """
-    POST /api/cart
-    Add item to cart (logged-in user)
-    """
     data = request.get_json()
     user_id = int(get_jwt_identity())
 
@@ -34,11 +30,8 @@ def add_to_cart():
 @cart_bp.get("/")
 @jwt_required()
 def get_cart():
-    """
-    GET /api/cart
-    Get cart items for logged-in user
-    """
     user_id = int(get_jwt_identity())
+
     items = CartItem.query.filter_by(user_id=user_id).all()
 
     return jsonify([
@@ -54,14 +47,10 @@ def get_cart():
     ]), 200
 
 
-@cart_bp.delete("/<int:id>")
+@cart_bp.delete("/<int:item_id>")
 @jwt_required()
-def delete_cart_item(id):
-    """
-    DELETE /api/cart/<id>
-    Remove single cart item
-    """
-    CartItem.query.filter_by(id=id).delete()
+def remove_item(item_id):
+    CartItem.query.filter_by(id=item_id).delete()
     db.session.commit()
 
     return jsonify({"message": "Item removed"}), 200
