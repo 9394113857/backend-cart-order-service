@@ -1,0 +1,12 @@
+git commit -m "🛒 Orders Flow v1 – Cart → Order Architecture Upgrade
+
+1️⃣ Introduced Order & OrderItem tables for persistent order storage
+2️⃣ Implemented atomic checkout flow (create order → move cart items → clear cart)
+3️⃣ Added order status lifecycle (placed | cancelled | shipped | delivered)
+4️⃣ Refined cart behavior as temporary pre-checkout state
+5️⃣ Secured all cart & checkout routes with JWT
+6️⃣ Aligned backend responses with Angular checkout & orders flow
+7️⃣ Enabled ML event tracking readiness for order funnel analytics
+8️⃣ Added health check endpoint for Render cold-start handling
+
+📅 $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
