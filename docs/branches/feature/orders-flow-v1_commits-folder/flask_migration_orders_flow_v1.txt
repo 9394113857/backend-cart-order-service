@@ -75,3 +75,120 @@ git push -u origin feature/orders-flow-v1
 #
 # DO NOT rerun migrate unless schema changes again
 # =====================================================
+
+
+=======================================================
+9-1-26:-
+
+# =====================================================
+# FILE NAME (suggested):
+# orders-flow-v1-cart-service-commands.txt
+# PURPOSE:
+# - Apply DB migrations
+# - Verify tables & data via Flask shell
+# - Commit & push feature branch safely
+# =====================================================
+
+
+# =====================================================
+# 1️⃣ FLASK MIGRATIONS (Cart / Checkout Service)
+# =====================================================
+
+# Make sure you are on feature branch
+git checkout feature/orders-flow-v1
+
+# Generate migration (safe even if already exists)
+flask db migrate -m "orders flow v1"
+
+# Apply migration
+flask db upgrade
+
+# Verify current migration state
+flask db current
+
+
+
+# =====================================================
+# 2️⃣ FLASK SHELL – VERIFY TABLES & DATA
+# =====================================================
+
+flask shell
+
+# ---- Inside Flask shell ----
+from sqlalchemy import inspect
+from app.extensions import db
+
+# Check tables exist
+inspector = inspect(db.engine)
+print(inspector.get_table_names())
+# Expected:
+# ['alembic_version', 'cart_items', 'orders', 'order_items']
+
+
+# Verify Order model
+from app.models.order import Order
+print(Order.__table__.columns.keys())
+
+# Verify OrderItem model
+from app.models.order_item import OrderItem
+print(OrderItem.__table__.columns.keys())
+
+exit()
+# ---- Exit Flask shell ----
+
+
+
+# =====================================================
+# 3️⃣ GIT COMMIT & PUSH (Feature Branch)
+# =====================================================
+
+git status
+
+git add .
+
+git commit -m "feat(cart-orders): implement orders flow v1 🧾📦
+- Added orders & order_items tables
+- Checkout now creates orders + order items
+- Cart cleared after successful checkout
+- Order status lifecycle introduced
+- APIs added to fetch & cancel user orders
+Timestamp: 2026-01-09 IST"
+
+git push -u origin feature/orders-flow-v1
+
+======================================================================
+
+# ======================================
+# CART + ORDER SERVICE – FINAL FLOW
+# ======================================
+
+# 1️⃣ Ensure latest schema
+flask db current
+flask db upgrade
+
+# 2️⃣ Verify tables
+flask shell
+
+from sqlalchemy import inspect
+from app.extensions import db
+inspect(db.engine).get_table_names()
+
+# Expected:
+# ['alembic_version', 'cart_items', 'orders', 'order_items']
+
+# 3️⃣ Verify order creation
+from app.models.order import Order
+Order.query.all()
+
+exit()
+
+
+# 4️⃣ Git commit
+git status
+git add .
+git commit -m "feat(orders): complete cart → checkout → orders flow v1 🧾🚀 (2026-01-09)"
+
+# 5️⃣ Push feature branch
+git push -u origin feature/orders-flow-v1
+
+

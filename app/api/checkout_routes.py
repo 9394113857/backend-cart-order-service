@@ -1,6 +1,5 @@
 ﻿from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-
 from app.extensions import db
 from app.models.order import Order
 from app.models.order_item import OrderItem
@@ -14,67 +13,48 @@ checkout_bp = Blueprint("checkout", __name__)
 def checkout():
     """
     POST /api/checkout
-    - Create order
-    - Create order items
-    - Clear cart
+    Create order + order items + clear cart
     """
-    data = request.get_json() or {}
+    data = request.get_json()
     user_id = int(get_jwt_identity())
-
-    contact = data.get("contact")
-    address = data.get("address")
-    total_price = data.get("total_price")
-
-    if not contact or not address or not total_price:
-        return jsonify({"message": "Invalid checkout data"}), 400
 
     cart_items = CartItem.query.filter_by(user_id=user_id).all()
     if not cart_items:
-        return jsonify({"message": "Cart is empty"}), 400
+        return jsonify({"error": "Cart is empty"}), 400
 
     try:
-        # ----------------------------
-        # Create Order
-        # ----------------------------
         order = Order(
             user_id=user_id,
-            contact=contact,
-            address=address,
-            total_price=total_price,
-            status="placed"
+            contact=data["contact"],
+            address=data["address"],
+            total_price=data["total_price"]
         )
         db.session.add(order)
-        db.session.flush()  # get order.id
+        db.session.flush()
 
-        # ----------------------------
-        # Create Order Items
-        # ----------------------------
         for item in cart_items:
-            order_item = OrderItem(
+            db.session.add(OrderItem(
                 order_id=order.id,
                 product_id=item.product_id,
                 name=item.name,
                 price=item.price,
                 quantity=item.quantity,
                 image=item.image
-            )
-            db.session.add(order_item)
+            ))
 
-        # ----------------------------
-        # Clear Cart
-        # ----------------------------
         CartItem.query.filter_by(user_id=user_id).delete()
+
+        # TODO (orders-flow-v1):
+        # Deduct product stock from Product Service
 
         db.session.commit()
 
         return jsonify({
-            "message": "Order placed successfully",
-            "order_id": order.id
+            "order_id": order.id,
+            "status": order.status,
+            "message": "Order placed successfully"
         }), 201
 
-    except Exception as e:
+    except Exception:
         db.session.rollback()
-        return jsonify({
-            "message": "Checkout failed",
-            "error": str(e)
-        }), 500
+        return jsonify({"error": "Checkout failed"}), 500
