@@ -369,5 +369,151 @@ plan next feature (payments / returns / analytics)
 
 You’re killing it 🔥
 
+--------------------------------------
+Perfect, this is the right migration file to fix now 👍
+I’ll do exactly what you asked:
+
+✅ Comment the old unsafe logic
+
+✅ Add the correct Postgres-safe logic
+
+✅ Give full migration file
+
+✅ Give exact commands to run now (no guessing)
+
+🔥 WHY THIS MIGRATION FAILED (1-line recap)
+
+cart_items.product_id existed earlier as TEXT, now model says INTEGER
+Postgres needs explicit casting → USING product_id::integer
+
+✅ WHAT WE WILL DO (SAFE & CORRECT)
+
+In revision 9910221764a8 (the one failing), we must:
+
+Explicitly cast product_id
+
+Then allow 8d969f733b22 (order_items) to run cleanly
+
+✅ FULL FIXED MIGRATION FILE
+
+📄 migrations/versions/9910221764a8_orders_flow_v1.py
+
+"""orders flow v1
+
+Revision ID: 9910221764a8
+Revises: c1f1b053aa99
+Create Date: 2026-01-09
+
+"""
+
+from alembic import op
+import sqlalchemy as sa
+
+
+# revision identifiers
+revision = '9910221764a8'
+down_revision = 'c1f1b053aa99'
+branch_labels = None
+depends_on = None
+
+
+def upgrade():
+    # ===============================
+    # 🔥 FIX: PostgreSQL SAFE CAST
+    # ===============================
+    # OLD (AUTO-GENERATED ❌ - DO NOT USE)
+    #
+    # with op.batch_alter_table('cart_items') as batch_op:
+    #     batch_op.alter_column(
+    #         'product_id',
+    #         type_=sa.Integer()
+    #     )
+
+    # ✅ NEW: Explicit cast for PostgreSQL
+    op.execute(
+        """
+        ALTER TABLE cart_items
+        ALTER COLUMN product_id
+        TYPE INTEGER
+        USING product_id::integer
+        """
+    )
+
+
+def downgrade():
+    # Rollback to TEXT if needed
+    op.execute(
+        """
+        ALTER TABLE cart_items
+        ALTER COLUMN product_id
+        TYPE VARCHAR
+        """
+    )
+
+✅ YOUR order_items MIGRATION IS PERFECT (NO CHANGE)
+
+📄 8d969f733b22_orders_flow_v1.py
+👉 DO NOT TOUCH IT — it’s already correct ✔
+
+🚀 NOW RUN THESE COMMANDS (IN ORDER)
+1️⃣ Activate env & set DB
+.\venv\Scripts\activate
+$env:DATABASE_URL="postgresql+psycopg://<neon-url>"
+
+2️⃣ Upgrade migrations
+flask db upgrade
+
+
+You should now see:
+
+Running upgrade c1f1b053aa99 -> 9910221764a8
+Running upgrade 9910221764a8 -> 8d969f733b22
+
+
+✅ NO ERRORS
+
+3️⃣ Verify schema
+flask shell
+
+from sqlalchemy import inspect
+from app.extensions import db
+
+inspector = inspect(db.engine)
+[(c["name"], c["type"]) for c in inspector.get_columns("cart_items")]
+
+
+Expect:
+
+product_id → INTEGER ✅
+
+4️⃣ Run service
+flask run --port 5003
+
+🧠 WHY THIS IS THE CORRECT INDUSTRY FIX
+Approach	Verdict
+Auto alter	❌ breaks in Postgres
+Drop tables	⚠️ ok for cart, risky habit
+Explicit USING	✅ Production-grade
+
+This is exactly how senior backend engineers fix schema drift.
+
+🏁 FINAL STATE AFTER THIS
+Component	Status
+Auth	✅
+Product	✅
+Cart	✅
+Orders	✅
+ML Events	✅
+Angular	✅
+🎯 NEXT (WHEN YOU SAY “GO”)
+
+Merge feature/orders-flow-v1 → main
+
+Tag release v1.0.0
+
+Start Payments / Returns / Analytics
+
+Say “upgrade success” once flask db upgrade completes 🔥
+
 
 
