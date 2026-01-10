@@ -1,21 +1,20 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
+import requests
+
 from app.models.order import Order
 from app.models.order_item import OrderItem
 from app.extensions import db
 
 orders_bp = Blueprint("orders", __name__)
 
+ML_EVENTS_URL = "https://backend-ml-events-service.onrender.com/api/events"
+
 
 @orders_bp.get("/")
 @jwt_required()
 def get_my_orders():
-    """
-    GET /api/orders
-    Fetch all orders of logged-in user
-    """
     user_id = int(get_jwt_identity())
-
     orders = Order.query.filter_by(user_id=user_id).order_by(
         Order.created_at.desc()
     ).all()
@@ -34,9 +33,6 @@ def get_my_orders():
 @orders_bp.get("/<int:order_id>")
 @jwt_required()
 def get_order_details(order_id):
-    """
-    GET /api/orders/<order_id>
-    """
     user_id = int(get_jwt_identity())
 
     order = Order.query.filter_by(id=order_id, user_id=user_id).first()
@@ -65,9 +61,6 @@ def get_order_details(order_id):
 @orders_bp.patch("/<int:order_id>/cancel")
 @jwt_required()
 def cancel_order(order_id):
-    """
-    PATCH /api/orders/<order_id>/cancel
-    """
     user_id = int(get_jwt_identity())
 
     order = Order.query.filter_by(id=order_id, user_id=user_id).first()
@@ -79,5 +72,15 @@ def cancel_order(order_id):
 
     order.status = "cancelled"
     db.session.commit()
+
+    # 🔥 ML EVENT
+    requests.post(
+        ML_EVENTS_URL,
+        json={
+            "event_type": "order_cancelled",
+            "object_type": "order",
+            "object_id": order.id
+        }
+    )
 
     return jsonify({"message": "Order cancelled"}), 200

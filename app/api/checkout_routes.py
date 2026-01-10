@@ -1,5 +1,7 @@
 ﻿from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
+import requests
+
 from app.extensions import db
 from app.models.order import Order
 from app.models.order_item import OrderItem
@@ -7,14 +9,13 @@ from app.models.cart_item import CartItem
 
 checkout_bp = Blueprint("checkout", __name__)
 
+PRODUCT_SERVICE_URL = "https://backend-product-service.onrender.com/api/v1/products/decrease-stock"
+ML_EVENTS_URL = "https://backend-ml-events-service.onrender.com/api/events"
+
 
 @checkout_bp.post("/")
 @jwt_required()
 def checkout():
-    """
-    POST /api/checkout
-    Create order + order items + clear cart
-    """
     data = request.get_json()
     user_id = int(get_jwt_identity())
 
@@ -32,6 +33,8 @@ def checkout():
         db.session.add(order)
         db.session.flush()
 
+        items_payload = []
+
         for item in cart_items:
             db.session.add(OrderItem(
                 order_id=order.id,
@@ -42,11 +45,33 @@ def checkout():
                 image=item.image
             ))
 
+            items_payload.append({
+                "product_id": item.product_id,
+                "quantity": item.quantity
+            })
+
+        # 🔥 STOCK DEDUCTION
+        requests.post(
+            PRODUCT_SERVICE_URL,
+            json={"items": items_payload},
+            headers={"Authorization": request.headers.get("Authorization")}
+        )
+
+        # 🔥 ML EVENT
+        requests.post(
+            ML_EVENTS_URL,
+            json={
+                "event_type": "order_completed",
+                "object_type": "order",
+                "object_id": order.id,
+                "metadata": {
+                    "total_price": order.total_price,
+                    "items": items_payload
+                }
+            }
+        )
+
         CartItem.query.filter_by(user_id=user_id).delete()
-
-        # TODO (orders-flow-v1):
-        # Deduct product stock from Product Service
-
         db.session.commit()
 
         return jsonify({
@@ -55,6 +80,6 @@ def checkout():
             "message": "Order placed successfully"
         }), 201
 
-    except Exception:
+    except Exception as e:
         db.session.rollback()
         return jsonify({"error": "Checkout failed"}), 500
