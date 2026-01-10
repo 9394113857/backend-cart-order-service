@@ -1,0 +1,15 @@
+If you want, next I can:
+
+🔀 Generate merge commit messages
+
+📦 Create release tag naming
+
+📄 Draft CHANGELOG.md (v1.0.0)
+
+Just say the word 😎
+
+=======================================
+
+👉 Next step:
+“Implement GET /api/orders (backend + Angular Orders page)”
+

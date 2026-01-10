@@ -1,0 +1,208 @@
+# ===============================
+# CART + CHECKOUT BACKEND SETUP
+# ===============================
+
+mkdir app, app\api, app\models, app\services, app\extensions, migrations, docs
+
+# -------------------------------
+# requirements.txt
+# -------------------------------
+@"
+Flask==3.0.2
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.0.5
+Flask-JWT-Extended==4.6.0
+Flask-CORS==4.0.0
+python-dotenv==1.0.1
+psycopg[binary]>=3.3.0
+gunicorn==21.2.0
+"@ | Out-File requirements.txt -Encoding utf8
+
+# -------------------------------
+# run.py
+# -------------------------------
+@"
+from app import create_app
+
+app = create_app()
+
+if __name__ == '__main__':
+    app.run(port=5003)
+"@ | Out-File run.py -Encoding utf8
+
+# -------------------------------
+# app/__init__.py
+# -------------------------------
+@"
+from flask import Flask
+from flask_cors import CORS
+from .extensions import db, migrate, jwt
+from .api.cart_routes import cart_bp
+from .api.checkout_routes import checkout_bp
+from .config import Config
+
+def create_app():
+    app = Flask(__name__)
+    app.config.from_object(Config)
+
+    CORS(app)
+    db.init_app(app)
+    migrate.init_app(app, db)
+    jwt.init_app(app)
+
+    app.register_blueprint(cart_bp, url_prefix='/api/cart')
+    app.register_blueprint(checkout_bp, url_prefix='/api/checkout')
+
+    return app
+"@ | Out-File app\__init__.py -Encoding utf8
+
+# -------------------------------
+# app/config.py
+# -------------------------------
+@"
+import os
+
+class Config:
+    SECRET_KEY = os.getenv('SECRET_KEY', 'cart-secret-key')
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///cart.db')
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'jwt-secret-key')
+"@ | Out-File app\config.py -Encoding utf8
+
+# -------------------------------
+# app/extensions/__init__.py
+# -------------------------------
+@"
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from flask_jwt_extended import JWTManager
+
+db = SQLAlchemy()
+migrate = Migrate()
+jwt = JWTManager()
+"@ | Out-File app\extensions\__init__.py -Encoding utf8
+
+# -------------------------------
+# app/models/cart_item.py
+# -------------------------------
+@"
+from app.extensions import db
+from datetime import datetime
+
+class CartItem(db.Model):
+    __tablename__ = 'cart_items'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, nullable=False)
+    product_id = db.Column(db.String(100), nullable=False)
+    name = db.Column(db.String(200), nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    image = db.Column(db.String(500))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+"@ | Out-File app\models\cart_item.py -Encoding utf8
+
+# -------------------------------
+# app/models/order.py
+# -------------------------------
+@"
+from app.extensions import db
+from datetime import datetime
+
+class Order(db.Model):
+    __tablename__ = 'orders'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, nullable=False)
+    contact = db.Column(db.String(20), nullable=False)
+    address = db.Column(db.String(500), nullable=False)
+    total_price = db.Column(db.Float, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+"@ | Out-File app\models\order.py -Encoding utf8
+
+# -------------------------------
+# app/api/cart_routes.py
+# -------------------------------
+@"
+from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from app.extensions import db
+from app.models.cart_item import CartItem
+
+cart_bp = Blueprint('cart', __name__)
+
+@cart_bp.post('/')
+@jwt_required()
+def add_to_cart():
+    data = request.get_json()
+    user_id = get_jwt_identity()
+
+    item = CartItem(
+        user_id=user_id,
+        product_id=data['productId'],
+        name=data['name'],
+        price=data['price'],
+        quantity=data['quantity'],
+        image=data.get('image')
+    )
+    db.session.add(item)
+    db.session.commit()
+    return jsonify({'message': 'Added to cart'}), 201
+
+@cart_bp.get('/')
+@jwt_required()
+def get_cart():
+    user_id = get_jwt_identity()
+    items = CartItem.query.filter_by(user_id=user_id).all()
+    return jsonify([item.__dict__ for item in items]), 200
+
+@cart_bp.delete('/<int:id>')
+@jwt_required()
+def delete_cart_item(id):
+    CartItem.query.filter_by(id=id).delete()
+    db.session.commit()
+    return jsonify({'message': 'Item removed'}), 200
+"@ | Out-File app\api\cart_routes.py -Encoding utf8
+
+# -------------------------------
+# app/api/checkout_routes.py
+# -------------------------------
+@"
+from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from app.extensions import db
+from app.models.order import Order
+from app.models.cart_item import CartItem
+
+checkout_bp = Blueprint('checkout', __name__)
+
+@checkout_bp.post('/')
+@jwt_required()
+def checkout():
+    data = request.get_json()
+    user_id = get_jwt_identity()
+
+    order = Order(
+        user_id=user_id,
+        contact=data['contact'],
+        address=data['address'],
+        total_price=data['total_price']
+    )
+    db.session.add(order)
+    CartItem.query.filter_by(user_id=user_id).delete()
+    db.session.commit()
+
+    return jsonify({'message': 'Order placed successfully'}), 201
+"@ | Out-File app\api\checkout_routes.py -Encoding utf8
+
+# -------------------------------
+# .gitignore
+# -------------------------------
+@"
+venv/
+.env
+*.db
+__pycache__/
+"@ | Out-File .gitignore -Encoding utf8
+
+Write-Host "✅ Cart + Checkout backend project created successfully"
