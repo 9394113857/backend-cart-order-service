@@ -1,0 +1,61 @@
+🟨 CELL 3 — CART + ORDER SERVICE (Cart, Orders, Order Items)
+# =====================================================
+# CART + ORDER SERVICE – DATABASE INSPECTION (FLASK SHELL)
+# =====================================================
+
+# Step 1: Activate virtual environment
+.\venv\Scripts\activate
+
+# Step 2: Set DATABASE_URL
+$env:DATABASE_URL="postgresql+psycopg://neondb_owner:npg_c7TOmvWP6rbN@ep-cool-sun-a1a36os8-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+
+
+flask db current
+
+# Step 3: Open Flask shell
+flask shell
+
+
+# -----------------------------
+# INSIDE FLASK SHELL
+# -----------------------------
+
+from sqlalchemy import inspect
+from app.extensions import db
+from app.models.cart_item import CartItem
+from app.models.order import Order
+from app.models.order_item import OrderItem
+
+# List tables
+inspect(db.engine).get_table_names()
+
+# View cart items
+CartItem.query.all()
+
+# View orders
+Order.query.all()
+
+# View order items
+OrderItem.query.all()
+
+# Exit shell
+exit()
+
+
+---------------------------------------------------------
+Step : REMOVE DATABASE_URL (CLEAN & SAFE)
+---------------------------------------------------------
+if (Test-Path Env:DATABASE_URL) {
+    Remove-Item Env:DATABASE_URL
+    Write-Host "DATABASE_URL removed" -ForegroundColor Green
+} else {
+    Write-Host "DATABASE_URL not set" -ForegroundColor Yellow
+}
+
+----------------------------------------------------
+STEP : (OPTIONAL) CLEAR DATABASE_URL
+----------------------------------------------------
+# Removes Neon URL from terminal session
+# Good practice but not mandatory
+
+Remove-Item Env:DATABASE_URL
