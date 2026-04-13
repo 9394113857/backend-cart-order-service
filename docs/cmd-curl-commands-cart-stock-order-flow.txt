@@ -43,20 +43,25 @@ SET ORDER_ID=PASTE_ORDER_ID_HERE
 AUTH SERVICE
 ====================================================================
 
-1️⃣ AUTH HEALTH
+#1️⃣ AUTH HEALTH
 curl %AUTH_BASE_URL%/api/v1/auth/
 
-2️⃣ SELLER REGISTER
+#2️⃣ SELLER REGISTER
 curl -X POST %AUTH_BASE_URL%/api/v1/auth/angularUser/register ^
 -H "Content-Type: application/json" ^
 -d "{\"email\":\"seller@test.com\",\"password\":\"seller123\",\"role\":\"seller\"}"
 
-3️⃣ SELLER LOGIN (COPY access_token)
+#3️⃣ SELLER LOGIN (COPY access_token)
 curl -X POST %AUTH_BASE_URL%/api/v1/auth/angularUser/login ^
 -H "Content-Type: application/json" ^
 -d "{\"email\":\"seller@test.com\",\"password\":\"seller123\"}"
 
-4️⃣ SELLER PROFILE
+# SELLER JWT:-
+# Ex:- SET SELLER_TOKEN=PASTE_SELLER_JWT_HERE
+
+SET SELLER_TOKEN=
+
+#4️⃣ SELLER PROFILE
 curl -X GET %AUTH_BASE_URL%/api/v1/auth/profile ^
 -H "Authorization: Bearer %SELLER_TOKEN%"
 
@@ -64,100 +69,119 @@ curl -X GET %AUTH_BASE_URL%/api/v1/auth/profile ^
 PRODUCT SERVICE
 ====================================================================
 
-5️⃣ PRODUCT HEALTH
-curl %PRODUCT_BASE_URL%/api/angularProduct/health
+#5️⃣ PRODUCT HEALTH
+curl %PRODUCT_BASE_URL%
 
-6️⃣ ADD PRODUCT
-curl -X POST %PRODUCT_BASE_URL%/api/angularProduct/add ^
+#6️⃣ ADD PRODUCT
+curl -X POST %PRODUCT_BASE_URL%/api/v1/products/add ^
 -H "Authorization: Bearer %SELLER_TOKEN%" ^
 -H "Content-Type: application/json" ^
--d "{\"name\":\"Laptop\",\"price\":55000,\"description\":\"Gaming laptop\",\"category\":\"Electronics\"}"
+-d "{\"name\":\"Laptop\",\"price\":55000,\"description\":\"Gaming laptop\",\"category\":\"Electronics\",\"image\":\"img.jpg\"}"
 
-7️⃣ GET ALL PRODUCTS
-curl %PRODUCT_BASE_URL%/api/angularProduct/get
+SET PRODUCT_ID=
 
-8️⃣ GET SINGLE PRODUCT
-curl %PRODUCT_BASE_URL%/api/angularProduct/get/%PRODUCT_ID%
+echo %PRODUCT_ID%
+
+# ADD VARIANT:
+curl -X POST %PRODUCT_BASE_URL%/api/v1/products/%PRODUCT_ID%/variants ^
+-H "Authorization: Bearer %SELLER_TOKEN%" ^
+-H "Content-Type: application/json" ^
+-d "{\"color\":\"Black\",\"stock\":10}"
+
+SET VARIANT_ID=
+
+#7️⃣ GET ALL PRODUCTS
+curl %PRODUCT_BASE_URL%/api/v1/products/list
+
+#8️⃣ GET SINGLE PRODUCT
+curl %PRODUCT_BASE_URL%/api/v1/products/%PRODUCT_ID%
+
+# Seller Logout Now:-
+curl -X POST %AUTH_BASE_URL%/api/v1/auth/logout ^
+-H "Authorization: Bearer %SELLER_TOKEN%"
+
+# VERIFY (TRY PROFILE WITH SAME TOKEN):-
+curl -X GET %AUTH_BASE_URL%/api/v1/auth/profile ^
+-H "Authorization: Bearer %SELLER_TOKEN%"
+
+
+===========================================
+✅✅✅ Upto Seller Logout Working ✅✅✅
+===========================================
+
+
+#🚀 🟦 1️⃣ CUSTOMER REGISTER
+curl -X POST %AUTH_BASE_URL%/api/v1/auth/angularUser/register ^
+-H "Content-Type: application/json" ^
+-d "{\"email\":\"customer@test.com\",\"password\":\"cust123\",\"role\":\"customer\"}"
+
+#🚀 🟩 2️⃣ CUSTOMER LOGIN
+curl -X POST %AUTH_BASE_URL%/api/v1/auth/angularUser/login ^
+-H "Content-Type: application/json" ^
+-d "{\"email\":\"customer@test.com\",\"password\":\"cust123\"}"
+
+#🚀 🟨 3️⃣ SET TOKEN
+SET CUSTOMER_TOKEN=
+
+#🚀 🟧 4️⃣ ADD TO CART
+curl -X POST %CART_BASE_URL%/api/cart ^
+-H "Authorization: Bearer %CUSTOMER_TOKEN%" ^
+-H "Content-Type: application/json" ^
+-d "{\"product_id\":%PRODUCT_ID%,\"variant_id\":%VARIANT_ID%,\"color\":\"Black\",\"name\":\"Laptop\",\"price\":55000,\"quantity\":2}"
+
+
+#🚀 🟦 1️⃣ VIEW CART (OPTIONAL CHECK)
+curl -X GET %CART_BASE_URL%/api/cart ^
+-H "Authorization: Bearer %CUSTOMER_TOKEN%"
+
+#🚀 🟩 1️⃣ CHECKOUT
+curl -X POST %CART_BASE_URL%/api/checkout ^
+-H "Authorization: Bearer %CUSTOMER_TOKEN%" ^
+-H "Content-Type: application/json" ^
+-d "{\"contact\":\"9999999999\",\"address\":\"Test Address\",\"total_price\":110000}"
+
+#🚀 🟨 1️⃣ SET ORDER_ID
+SET ORDER_ID=
+
+#🚀 🟧 2️⃣ GET ALL ORDERS
+curl -X GET %CART_BASE_URL%/api/orders ^
+-H "Authorization: Bearer %CUSTOMER_TOKEN%"
+
+#🚀 🟥 3️⃣ GET ORDER DETAILS
+curl -X GET %CART_BASE_URL%/api/orders/%ORDER_ID% ^
+-H "Authorization: Bearer %CUSTOMER_TOKEN%"
+
 
 ====================================================================
 STOCK MANAGEMENT (PRODUCT SERVICE)
 ====================================================================
 
-9️⃣ DECREASE STOCK (SIMULATE ORDER)
-curl -X POST %PRODUCT_BASE_URL%/api/v1/products/decrease-stock ^
--H "Authorization: Bearer %CUSTOMER_TOKEN%" ^
--H "Content-Type: application/json" ^
--d "{
-  \"items\": [
-    {
-      \"product_id\": %PRODUCT_ID%,
-      \"quantity\": 2
-    }
-  ]
-}"
-
-🔟 VERIFY STOCK DECREASE
+#🟦 1️⃣ CHECK STOCK BEFORE CANCEL
 curl %PRODUCT_BASE_URL%/api/angularProduct/get/%PRODUCT_ID%
+
+#🟥 2️⃣ CANCEL ORDER
+curl -X PATCH %CART_BASE_URL%/api/orders/%ORDER_ID%/cancel ^
+-H "Authorization: Bearer %CUSTOMER_TOKEN%"
+
+#🟩 3️⃣ CHECK STOCK AFTER CANCEL
+curl %PRODUCT_BASE_URL%/api/angularProduct/get/%PRODUCT_ID%
+
+-------------------------------------------------------------------
+
+
+#🚀 🟦 1️⃣ CUSTOMER LOGOUT
+curl -X POST %AUTH_BASE_URL%/api/v1/auth/logout ^
+-H "Authorization: Bearer %CUSTOMER_TOKEN%"
+
+
+#🚀 🟥 2️⃣ CUSTOMER LOGOUT - DO VERIFY TOKEN AGAIN (VERY IMPORTANT)
+curl -X GET %AUTH_BASE_URL%/api/v1/auth/profile ^
+-H "Authorization: Bearer %CUSTOMER_TOKEN%"
+
 
 ====================================================================
 CART SERVICE
 ====================================================================
-
-1️⃣1️⃣ ADD TO CART
-curl -X POST %CART_BASE_URL%/api/cart ^
--H "Authorization: Bearer %CUSTOMER_TOKEN%" ^
--H "Content-Type: application/json" ^
--d "{
-  \"productId\": %PRODUCT_ID%,
-  \"variantId\": %VARIANT_ID%,
-  \"color\": \"Black\",
-  \"name\": \"Laptop\",
-  \"price\": 55000,
-  \"quantity\": 2
-}"
-
-1️⃣2️⃣ VIEW CART
-curl -X GET %CART_BASE_URL%/api/cart ^
--H "Authorization: Bearer %CUSTOMER_TOKEN%"
-
-====================================================================
-CHECKOUT (ORDER PLACEMENT)
-====================================================================
-
-1️⃣3️⃣ CHECKOUT
-curl -X POST %CART_BASE_URL%/api/checkout ^
--H "Authorization: Bearer %CUSTOMER_TOKEN%" ^
--H "Content-Type: application/json" ^
--d "{
-  \"contact\": \"9999999999\",
-  \"address\": \"Test Address\",
-  \"total_price\": 110000
-}"
-
-REM ⬆ COPY order_id → SET ORDER_ID
-
-====================================================================
-ORDER VERIFICATION
-====================================================================
-
-1️⃣4️⃣ GET MY ORDERS
-curl -X GET %CART_BASE_URL%/api/orders ^
--H "Authorization: Bearer %CUSTOMER_TOKEN%"
-
-1️⃣5️⃣ GET ORDER DETAILS
-curl -X GET %CART_BASE_URL%/api/orders/%ORDER_ID% ^
--H "Authorization: Bearer %CUSTOMER_TOKEN%"
-
-====================================================================
-CANCEL / RESTORE STOCK
-====================================================================
-
-1️⃣6️⃣ CANCEL ORDER (RESTORES STOCK)
-curl -X PATCH %CART_BASE_URL%/api/orders/%ORDER_ID%/cancel ^
--H "Authorization: Bearer %CUSTOMER_TOKEN%"
-
-1️⃣7️⃣ VERIFY STOCK RESTORED
-curl %PRODUCT_BASE_URL%/api/angularProduct/get/%PRODUCT_ID%
 
 ====================================================================
 END OF CART + ORDER + STOCK TEST FILE
