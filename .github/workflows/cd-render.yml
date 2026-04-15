@@ -76,7 +76,7 @@ jobs:
             echo "HTTP STATUS: $STATUS"
 
             if [ "$STATUS" = "200" ]; then
-              echo "🟢 Cart is UP"
+              echo "🟢 Cart is UP and Running 🚀"
               exit 0
             fi
 
@@ -109,7 +109,7 @@ jobs:
             🌐 URL: ${{ env.URL }}
 
             🟢 Service is healthy and responding
-            🚀 Deployment completed successfully
+            🚀 Deployment completed successfully for Cart Service
 
       # =========================
       # ❌ FAILURE EMAIL
