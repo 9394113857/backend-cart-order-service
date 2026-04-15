@@ -43,7 +43,7 @@ jobs:
           fi
 
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "URL=https://backend-auth-service-ks6f.onrender.com" >> $GITHUB_ENV
+          echo "URL=https://backend-cart-order-service-q6qh.onrender.com" >> $GITHUB_ENV
 
           echo "🚀 Deploying Version: $VERSION"
 
