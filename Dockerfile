@@ -6,27 +6,19 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# =====================================================
-# 🔥 Build arguments (from CI/CD)
-# =====================================================
+# 🔥 Build args
 ARG APP_VERSION
 ARG APP_COMMIT
 ARG APP_BRANCH
 
-# =====================================================
 # 📦 Install dependencies
-# =====================================================
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# =====================================================
-# 📂 Copy project files
-# =====================================================
+# 📂 Copy code
 COPY . .
 
-# =====================================================
-# 🧾 Generate build metadata (UTC + IST)
-# =====================================================
+# 🧾 Build metadata
 RUN python - <<EOF
 import json
 from datetime import datetime, timezone, timedelta
@@ -45,7 +37,5 @@ with open("build_info.json", "w") as f:
     json.dump(data, f, indent=2)
 EOF
 
-# =====================================================
-# 🚀 Run app (Render / Docker compatible)
-# =====================================================
+# 🚀 Run
 CMD ["sh", "-c", "gunicorn run:app -w 1 -b 0.0.0.0:$PORT --access-logfile - --error-logfile -"]
