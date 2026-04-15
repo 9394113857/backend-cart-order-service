@@ -105,7 +105,7 @@ jobs:
           cc: ${{ secrets.MAIL_TO_CC_MAIN }}
           from: ${{ secrets.MAIL_USERNAME_MAIN }}
           body: |
-            🚀 CI BUILD SUCCESS
+            🚀 CI BUILD SUCCESS on Cart Service
 
             📌 Type: ${{ env.TYPE }}
             🏷️ Name: ${{ env.NAME }}
@@ -122,7 +122,7 @@ jobs:
             🔗 Repo:
             ${{ env.REPO }}
 
-            ✅ Image pushed successfully
+            ✅ Image pushed successfully for 👉 Cart Service 👈
 
       # ===============================
       # ❌ Email Failure
