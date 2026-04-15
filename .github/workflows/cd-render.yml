@@ -1,0 +1,136 @@
+# =====================================================
+# 🚀 CD - Render Deploy (PRODUCTION SAFE FINAL)
+# =====================================================
+
+name: 🚀 CD - Render Deploy
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 20 * * *"   # 2:00 AM IST
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # =========================
+      # 🟢 Checkout
+      # =========================
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      # =========================
+      # 🟢 Fetch Tags
+      # =========================
+      - name: Fetch Tags
+        run: git fetch --tags
+
+      # =========================
+      # 🟢 Detect Version
+      # =========================
+      - name: Detect Version
+        run: |
+          TAGS=($(git tag --sort=-v:refname))
+
+          if [ ${#TAGS[@]} -eq 0 ]; then
+            VERSION="latest"
+          else
+            VERSION=${TAGS[0]}
+          fi
+
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "URL=https://backend-auth-service-ks6f.onrender.com" >> $GITHUB_ENV
+
+          echo "🚀 Deploying Version: $VERSION"
+
+      # =========================
+      # 🚀 Trigger Render Deploy
+      # =========================
+      - name: Trigger Render Deploy
+        run: |
+          echo "🚀 Triggering Render..."
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+
+      # =========================
+      # ⏳ Wait for warmup
+      # =========================
+      - name: Initial Wait
+        run: sleep 30
+
+      # =========================
+      # 🧪 SMART HEALTH CHECK (RETRY LOGIC)
+      # =========================
+      - name: Health Check (Retry Safe)
+        run: |
+          echo "🔍 Starting health check..."
+
+          for i in {1..10}; do
+            echo "Attempt $i..."
+
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" $URL)
+
+            echo "HTTP STATUS: $STATUS"
+
+            if [ "$STATUS" = "200" ]; then
+              echo "🟢 Cart is UP"
+              exit 0
+            fi
+
+            echo "⏳ Not ready yet... waiting 10s"
+            sleep 10
+          done
+
+          echo "🔴 Service failed after retries"
+          exit 1
+
+      # =========================
+      # 📧 SUCCESS EMAIL
+      # =========================
+      - name: 📧 Email Success
+        if: success()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.MAIL_USERNAME_MAIN }}
+          password: ${{ secrets.MAIL_PASSWORD_MAIN }}
+          subject: "🚀 Render CD SUCCESS - ${{ env.VERSION }}"
+          to: ${{ secrets.MAIL_USERNAME_MAIN }}
+          cc: ${{ secrets.MAIL_TO_CC_MAIN }}
+          from: ${{ secrets.MAIL_USERNAME_MAIN }}
+          body: |
+            🚀 Render Deployment SUCCESS
+
+            🏷️ Version: ${{ env.VERSION }}
+            🌐 URL: ${{ env.URL }}
+
+            🟢 Service is healthy and responding
+            🚀 Deployment completed successfully
+
+      # =========================
+      # ❌ FAILURE EMAIL
+      # =========================
+      - name: ❌ Email Failure
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.MAIL_USERNAME_MAIN }}
+          password: ${{ secrets.MAIL_PASSWORD_MAIN }}
+          subject: "🚨 Render CD FAILED - ${{ env.VERSION }}"
+          to: ${{ secrets.MAIL_USERNAME_MAIN }}
+          cc: ${{ secrets.MAIL_TO_CC_MAIN }}
+          from: ${{ secrets.MAIL_USERNAME_MAIN }}
+          body: |
+            🚨 Render Deployment FAILED
+
+            🏷️ Version: ${{ env.VERSION }}
+            🌐 URL: ${{ env.URL }}
+
+            ❌ Health check did not pass after retries
+            🔧 Check GitHub Actions logs immediately 
