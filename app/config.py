@@ -3,6 +3,10 @@
 # ===============================
 
 import os
+from dotenv import load_dotenv
+
+# 🔹 Load .env file (VERY IMPORTANT)
+load_dotenv()
 
 
 class Config:
@@ -12,7 +16,7 @@ class Config:
     # 🗄️ DATABASE
     SQLALCHEMY_DATABASE_URI = os.getenv(
         "DATABASE_URL",
-        "sqlite:///cart.db"   # ✅ local fallback
+        "sqlite:///cart.db"   # ✅ fallback if no env
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
@@ -22,8 +26,8 @@ class Config:
         "jwt-secret-key"
     )
 
-    # 🔗 PRODUCT SERVICE (MICROSERVICE URL)
+    # 🔗 PRODUCT SERVICE
     PRODUCT_BASE_URL = os.getenv(
         "PRODUCT_BASE_URL",
-        "http://127.0.0.1:5002"   # ✅ local fallback
+        "http://127.0.0.1:5002"   # ✅ fallback if no env
     )
