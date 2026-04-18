@@ -55,7 +55,7 @@ git branch -vv
 git add .
 
 # Commit with clear message
-git commit -m "Refactor: added service layer (cart, checkout, order) without API changes"
+git commit -m "Refactor: added service layer (cart, checkout, order) without API changess"
 
 # Push to feature branch
 git push
