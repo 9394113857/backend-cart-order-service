@@ -1,0 +1,62 @@
+# ============================================================
+# 🚀 PRODUCTION-LIKE LOCAL TEST (FINAL - COPY PASTE)
+# ============================================================
+
+# 🔹 1. Set Supabase DB (Cart Service DB)
+$env:DATABASE_URL="postgresql://postgres:Raghunadh_1992@db.ugpfvnzponokkvigevlg.supabase.co:5432/postgres"
+
+# 🔹 2. Set Product Service (Render Live URL)
+$env:PRODUCT_BASE_URL="https://backend-product-service-ncl2.onrender.com"
+
+# ============================================================
+# 🔍 3. VERIFY ENV VALUES
+# ============================================================
+
+echo "DATABASE_URL:"
+echo $env:DATABASE_URL
+
+echo "PRODUCT_BASE_URL:"
+echo $env:PRODUCT_BASE_URL
+
+# ============================================================
+# 🚀 4. RUN FLASK APP
+# ============================================================
+
+flask run
+
+# ============================================================
+# 🧪 5. TEST FLOW (IMPORTANT)
+# ============================================================
+
+# 1. Add to Cart  → should store in Supabase DB ✅
+# 2. Checkout     → should call Product Service (Render) ✅
+# 3. Orders       → should be created in Supabase ✅
+# 4. Cancel Order → should restore stock via Product Service ✅
+
+
+# ============================================================
+# 🧹 6. CLEANUP (BACK TO LOCAL MODE)
+# ============================================================
+
+Remove-Item Env:DATABASE_URL
+Remove-Item Env:PRODUCT_BASE_URL
+
+# ============================================================
+# 🔍 7. VERIFY REMOVED
+# ============================================================
+
+echo "After removal DATABASE_URL:"
+echo $env:DATABASE_URL
+
+echo "After removal PRODUCT_BASE_URL:"
+echo $env:PRODUCT_BASE_URL
+
+# ============================================================
+# 🚀 8. RUN AGAIN (LOCAL FALLBACK)
+# ============================================================
+
+flask run
+
+# 👉 Now:
+# DB → sqlite:///cart.db
+# Product → http://127.0.0.1:5002

@@ -1,0 +1,61 @@
+# ============================================================
+# 🚀 FEATURE BRANCH SETUP (SERVICE LAYER REFACTOR)
+# ============================================================
+
+# 🔹 Step 1: Switch to main branch
+git checkout main
+
+# 🔹 Step 2: Pull latest changes from remote
+git pull
+
+# 🔹 Step 3: Create new feature branch
+git checkout -b feature/service-layer-refactor
+
+# 🔹 Step 4: Push branch to remote (initial push)
+# This sets upstream tracking so future pushes are simple
+git push -u origin feature/service-layer-refactor
+
+
+# ============================================================
+# 🔍 VERIFY BRANCH
+# ============================================================
+
+# Check current branch
+git branch
+
+# Check remote tracking
+git branch -vv
+
+
+# ============================================================
+# 📌 NOTES
+# ============================================================
+
+# - Work only in this feature branch
+# - Do NOT commit directly to main
+# - Push changes regularly
+# - After completion → create PR → merge to main
+
+
+# ============================================================
+# 🚀 NEXT STEPS
+# ============================================================
+
+# 1. Add service layer (cart, checkout, order)
+# 2. Update routes to use services
+# 3. Test locally (cart → checkout → orders)
+# 4. Commit changes
+# 5. Push to feature branch
+
+# ========================================================================
+# 🚀 ADD + COMMIT + PUSH (CART SERVICE LAYER) Timely Pushing from feature
+# ========================================================================
+
+# Stage all changes (services + updated routes)
+git add .
+
+# Commit with clear message
+git commit -m "Refactor: added service layer (cart, checkout, order) without API changes"
+
+# Push to feature branch
+git push
