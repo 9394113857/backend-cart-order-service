@@ -1,0 +1,40 @@
+from flask import jsonify
+from ..extensions import db
+from ..models.cart_item import CartItem
+
+
+class CartService:
+
+    @staticmethod
+    def add_to_cart(user_id, data):
+        item = CartItem(
+            user_id=user_id,
+            product_id=data["product_id"],
+            variant_id=data["variant_id"],
+            name=data["name"],
+            color=data["color"],
+            price=data["price"],
+            quantity=data["quantity"]
+        )
+
+        db.session.add(item)
+        db.session.commit()
+
+        return jsonify({"message": "Added to cart"}), 201
+
+    @staticmethod
+    def get_cart(user_id):
+        items = CartItem.query.filter_by(user_id=user_id).all()
+
+        return jsonify([
+            {
+                "cart_item_id": i.id,
+                "product_id": i.product_id,
+                "variant_id": i.variant_id,
+                "name": i.name,
+                "color": i.color,
+                "price": i.price,
+                "quantity": i.quantity
+            }
+            for i in items
+        ]), 200
