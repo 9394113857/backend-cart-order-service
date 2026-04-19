@@ -61,3 +61,42 @@ git commit -m "Refactor: added service layer (cart, checkout, order) without API
 git push
 
 git status
+
+# ============================================================
+# 🔹 STEP 1: Ensure you're on feature branch Merging flow
+# ============================================================
+git checkout feature/service-layer-refactor
+
+# 🔹 Make sure everything is committed
+git status
+
+# If any changes:
+git add .
+git commit -m "Final: stable cart & order flow verifiedd"
+
+# 🔹 Push latest feature branch changes
+git push origin feature/service-layer-refactor
+
+
+# ============================================================
+# 🔹 STEP 2: Switch to main branch
+# ============================================================
+git checkout main
+
+# Pull latest main (IMPORTANT)
+git pull origin main
+
+
+# ============================================================
+# 🔹 STEP 3: Merge feature → main
+# ============================================================
+git merge feature/service-layer-refactor
+
+# If no conflicts → auto merge ✅
+# If conflicts → fix → git add . → git commit
+
+
+# ============================================================
+# 🔹 STEP 4: Push main to remote
+# ============================================================
+git push origin main
