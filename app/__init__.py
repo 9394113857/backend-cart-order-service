@@ -12,7 +12,7 @@ from .extensions import db, migrate, jwt
 
 
 # =====================================================
-# 🔧 BUILD INFO
+# 🔧 BUILD INFO   
 # =====================================================
 def get_build_info():
     try:
