@@ -1,0 +1,151 @@
+============================================================
+FINAL E-COMMERCE MODELS (2026 PRODUCTION DESIGN)
+Auth Service + Product Service + Cart Service
+============================================================
+============================================================
+🔐 AUTH SERVICE MODELS (FINAL)
+============================================================
+Core User (supports email + phone + password + OTP)
+User:
+id (PK)
+email (UNIQUE, nullable, indexed)
+phone_number (UNIQUE, nullable, indexed)
+password_hash (nullable) # NULL for OTP-only users
+role # SELLER / CUSTOMER / ADMIN
+is_active (default=True)
+is_verified (default=False)
+last_login_at
+created_at
+updated_at
+User Profile (basic details)
+UserProfile:
+id
+user_id (FK → User.id, UNIQUE)
+full_name
+address_line1
+address_line2
+city
+state
+pincode
+country
+Multiple Addresses (for checkout/delivery)
+UserAddress:
+id
+user_id (FK)
+full_name
+phone_number
+address_line1
+address_line2
+city
+state
+pincode
+country
+is_default
+created_at
+OTP System (login / verify / reset)
+OTP:
+id
+user_id (FK → User.id)
+code
+purpose # LOGIN / VERIFY / RESET_PASSWORD
+expires_at
+is_used (default=False)
+attempt_count (default=0)
+created_at
+============================================================
+🛒 PRODUCT SERVICE MODELS (FINAL)
+============================================================
+Category (hierarchical)
+Category:
+id (PK)
+name
+parent_id (self reference, nullable)
+is_active (default=True)
+created_at
+Product (owned by seller)
+Product:
+id (PK)
+name
+description
+category_id (FK)
+brand
+seller_id # from Auth Service
+base_price
+is_active (default=True)
+is_deleted (soft delete)
+created_at
+updated_at
+Product Variant (actual sellable item)
+ProductVariant:
+id (PK)
+product_id (FK)
+sku (UNIQUE)
+attributes_json # {"size": "M", "color": "Red"}
+price
+discount_price
+stock
+is_active
+created_at
+Product Images
+ProductImage:
+id
+product_id (FK)
+image_url
+is_primary (boolean)
+display_order
+Price History (for tracking price changes)
+ProductPriceHistory:
+id
+variant_id
+old_price
+new_price
+changed_at
+============================================================
+🧺 CART SERVICE MODELS (FINAL)
+============================================================
+Cart (one per user)
+Cart:
+id (PK)
+user_id # from Auth Service
+created_at
+updated_at
+Cart Item (core cart logic)
+CartItem:
+id (PK)
+cart_id (FK)
+product_id
+variant_id
+quantity
+Price snapshot at time of adding
+price_at_added_time
+discount_price_at_added_time
+Latest price (for comparison)
+current_price
+current_discount_price
+Flags for UI behavior
+is_saved_for_later (default=False)
+is_selected (default=True)
+created_at
+updated_at
+============================================================
+🔥 GLOBAL DESIGN RULES (VERY IMPORTANT)
+============================================================
+1. Auth Service is the ONLY source of user data
+2. Product Service stores seller_id (no user duplication)
+3. Cart Service stores only product_id + variant_id (no product duplication)
+4. ALWAYS use variant_id for cart & order
+5. ALWAYS store price snapshot in cart
+6. NEVER trust frontend price
+7. Product delete → cascade delete variants + images
+8. Cart uses latest price to detect price changes
+9. One user = one active cart
+10. Use JWT for authentication across all services
+============================================================
+END OF FINAL MODELS (LOCKED)
+============================================================
+
+#🚀 ✅ FINAL COMMIT MESSAGE (USE IN ALL 3 BACKENDS)
+git add .
+git commit -m "docs: add final production-grade models for auth, product, and cart services (2026 design)"
+git push
+
