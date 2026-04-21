@@ -1,0 +1,27 @@
+# ============================================================
+# 🛒 CART SERVICE - Local Environment Variables:- 
+# ============================================================
+
+# 🗄️ 1. DATABASE (LOCAL DEVELOPMENT)
+DATABASE_URL=sqlite:///cart.db
+
+# 🗄️ LIVE DATABASE (LOCAL DEVELOPMENT but you can use Superbas elive emans you can use thsia slo from lcoal also):-
+# DATABASE_URL=postgresql://postgres.grbywzrtwirkgrlsxnig:Raghunadh_1992@aws-1-ap-south-1.pooler.supabase.com:5432/postgres?sslmode=require
+
+# 🔗 2. PRODUCT SERVICE (LIVE Render and for lcoal if you need like):-
+PRODUCT_BASE_URL=https://backend-product-service-ncl2.onrender.com
+
+# 🔐 3. JWT (MUST MATCH ALL SERVICES)
+JWT_SECRET_KEY=9fA3xP@7Rk!2DqM8#ZbLw4^sC0N%YVJH
+
+# 🌱 4. FLASK ENV LOCAL
+FLASK_ENV=development
+
+# 🌱 FLASK ENV PRODUCTION
+# FLASK_ENV=Production
+
+# 🔌 5. PORT (optional for local):-
+PORT=5003
+
+# 🔌 LIVE PORT (optional for local and like you can use but not recommended oaky):-
+# PORT=10000
