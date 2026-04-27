@@ -37,6 +37,6 @@ git checkout -b k8s-cart-deploy
 git add . 
 git commit -m "Cart: Added K8s deployment & service config"
 git push --set-upstream origin k8s-cart-deploy
-git push origin feature/git push --set-upstream origin k8s-cart-deploy
+git push origin feature/k8s-cart-deploy
 #(Or) 
 git push  
