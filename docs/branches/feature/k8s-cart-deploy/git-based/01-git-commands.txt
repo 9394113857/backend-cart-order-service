@@ -1,0 +1,42 @@
+# =========================
+# AUTH SERVICE
+# =========================
+git checkout main                                               # switch to main branch
+git pull origin main                                            # pull latest code (avoid SHA issues)
+git checkout -b k8s-auth-deploy                                 # create feature branch
+git add .                                                       # stage changes
+git commit -m "Auth: Added K8s deployment & service config"     # commit changes
+git push --set-upstream origin k8s-auth-deploy                  # push branch
+git push origin feature/k8s-auth-deploy 
+#(Or) 
+git push                                     
+ 
+
+# =========================
+# PRODUCT SERVICE
+# =========================
+git checkout main
+git pull origin main
+git checkout -b k8s-product-deploy
+git add .
+git commit -m "Product: Added K8s deployment & service config"
+git push --set-upstream origin k8s-product-deploy
+git push origin feature/k8s-product-deploy
+#(Or) 
+git push  
+
+
+
+
+# =========================
+# CART SERVICE
+# =========================
+git checkout main
+git pull origin main
+git checkout -b k8s-cart-deploy
+git add . 
+git commit -m "Cart: Added K8s deployment & service config"
+git push --set-upstream origin k8s-cart-deploy
+git push origin feature/git push --set-upstream origin k8s-cart-deploy
+#(Or) 
+git push  
