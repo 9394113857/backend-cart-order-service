@@ -1,10 +1,11 @@
-```yaml
 name: CI - Backend Cart Service
 
 on:
   push:
     branches:
       - "**"
+    tags:
+      - "v*"
 
 jobs:
   build:
@@ -12,28 +13,38 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
           python-version: "3.11"
 
       - name: Install Dependencies
         run: |
-          python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest
 
       - name: Run Tests
-        run: pytest -v
+        run: PYTHONPATH=. pytest -v
+
+      - name: Set Version
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+            BRANCH="release"
+          else
+            VERSION=dev-${GITHUB_SHA}
+            BRANCH=${GITHUB_REF#refs/heads/}
+          fi
+          echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "APP_BRANCH=$BRANCH" >> $GITHUB_ENV
 
       - name: Docker Login
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
       - name: Build Image
-        run: docker build -t pythoncodelife/backend-cart-order-service:latest .
+        run: docker build -t pythoncodelife/backend-cart-order-service:${{ env.APP_VERSION }} .
 
       - name: Push Image
-        run: docker push pythoncodelife/backend-cart-order-service:latest
-```
+        run: docker push pythoncodelife/backend-cart-order-service:${{ env.APP_VERSION }}
