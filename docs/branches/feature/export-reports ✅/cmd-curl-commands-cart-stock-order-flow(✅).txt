@@ -25,9 +25,10 @@ SET CART_BASE_URL=http://127.0.0.1:5003
 REM =======================
 REM 👉 LIVE ENVIRONMENT
 REM =======================
-REM SET AUTH_BASE_URL=https://backend-auth-service-6zwi.onrender.com
+REM SET AUTH_BASE_URL=https://backend-auth-service-dkn7.onrender.com
 REM SET PRODUCT_BASE_URL=https://backend-product-service-ipnq.onrender.com
 REM SET CART_BASE_URL=https://backend-cart-order-service.onrender.com
+
 
 ====================================================================
 COMMON VARIABLES (SET MANUALLY)
