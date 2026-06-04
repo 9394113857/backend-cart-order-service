@@ -1,0 +1,244 @@
+FEATURE: export-reports
+
+Branch:
+feature/export-reports
+
+Status:
+Design Phase
+
+====================================================
+BUSINESS REQUIREMENT
+====================
+
+Customers should be able to export their order history.
+
+The export should initially support:
+
+1. CSV Export
+2. Local Download
+
+Future enhancements:
+
+1. PDF Export
+2. Email Export
+3. Seller Sales Export
+4. Generator-Based Streaming Export
+
+====================================================
+CURRENT SYSTEM ANALYSIS
+=======================
+
+Existing Models:
+
+CartItem
+Order
+OrderItem
+
+Existing APIs:
+
+GET    /api/orders/
+GET    /api/orders/<order_id>
+PATCH  /api/orders/<order_id>/cancel
+
+Existing Authentication:
+
+JWT Authentication
+
+Current User Identification:
+
+user_id = get_jwt_identity()
+
+====================================================
+PHASE 1
+Customer Order CSV Export
+=========================
+
+Goal:
+
+Allow logged-in customers to download their order history as CSV.
+
+Database Changes:
+
+None
+
+Model Changes:
+
+None
+
+Migration Required:
+
+No
+
+New Dependencies:
+
+No
+
+Files To Modify:
+
+app/api/orders_routes.py
+app/services/order_service.py
+
+Files Unchanged:
+
+app/models/cart_item.py
+app/models/order.py
+app/models/order_item.py
+
+app/services/cart_service.py
+app/services/checkout_service.py
+
+app/api/cart_routes.py
+app/api/checkout_routes.py
+
+app/**init**.py
+app/extensions.py
+
+====================================================
+PROPOSED API
+============
+
+GET /api/orders/export/csv
+
+Authentication:
+
+JWT Required
+
+Behavior:
+
+Returns downloadable CSV file.
+
+====================================================
+CSV COLUMNS
+===========
+
+Order ID
+Status
+Total Price
+Created At
+
+Product ID
+Variant ID
+Quantity
+Price
+
+====================================================
+ANGULAR UI PLAN
+===============
+
+Orders Page
+
+Export ▼
+
+```
+CSV
+PDF
+```
+
+Phase 1:
+
+CSV enabled
+
+PDF disabled or hidden
+
+====================================================
+LOCAL DOWNLOAD FLOW
+===================
+
+Customer
+↓
+Clicks Export
+↓
+CSV
+↓
+Angular Calls API
+↓
+GET /api/orders/export/csv
+↓
+Backend Generates CSV
+↓
+Browser Downloads File
+
+====================================================
+PHASE 2
+Customer PDF Export
+===================
+
+Possible Libraries:
+
+reportlab
+fpdf
+
+New Endpoint:
+
+GET /api/orders/export/pdf
+
+====================================================
+PHASE 3
+Email Export
+============
+
+Customer clicks:
+
+Email My Report
+
+Backend:
+
+Generate CSV/PDF
+
+Attach File
+
+Send Email
+
+====================================================
+PHASE 4
+Generator-Based Streaming Export
+================================
+
+Purpose:
+
+Handle large datasets efficiently.
+
+Current:
+
+Order.query.all()
+
+Future:
+
+yield rows one at a time
+
+Benefits:
+
+Lower memory usage
+Large export support
+Improved scalability
+
+====================================================
+INTERVIEW TALKING POINTS
+========================
+
+Feature Branch Development
+
+JWT Authentication
+
+REST API Design
+
+CSV Export
+
+Angular Integration
+
+Backward Compatibility
+
+No Database Changes
+
+Incremental Delivery
+
+Future Scalability Planning
+
+Generator-Based Optimization
+
+====================================
+git add .
+
+git commit -m "Added export reports feature design document"
+
+git push
