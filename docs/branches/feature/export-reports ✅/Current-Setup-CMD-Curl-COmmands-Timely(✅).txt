@@ -1,0 +1,106 @@
+REM ==================================================
+REM 🚀 STEP 1 - ENVIRONMENT SETUP
+REM ==================================================
+
+SET AUTH_BASE_URL=https://backend-auth-service-ks6f.onrender.com
+SET PRODUCT_BASE_URL=https://backend-product-service.onrender.com
+SET CART_BASE_URL=http://127.0.0.1:5003
+
+REM ==================================================
+REM 🚀 STEP 2 - CUSTOMER CREDENTIALS
+REM ==================================================
+
+#SET EMAIL=[customer21@gmail.com](mailto:customer21@gmail.com)
+
+SET EMAIL=customer21@gmail.com
+SET PASSWORD=customer21@123
+
+REM ==================================================
+REM 🚀 STEP 3 - VERIFY VARIABLES
+REM ==================================================
+
+echo %AUTH_BASE_URL%
+echo %PRODUCT_BASE_URL%
+echo %CART_BASE_URL%
+echo %EMAIL%
+echo %PASSWORD%
+
+REM ==================================================
+REM 🚀 STEP 4 - CUSTOMER LOGIN
+REM ==================================================
+
+curl -X POST %AUTH_BASE_URL%/api/v1/auth/angularUser/login ^
+-H "Content-Type: application/json" ^
+-d "{\"email\":\"%EMAIL%\",\"password\":\"%PASSWORD%\"}"
+
+REM ==================================================
+REM 🚀 STEP 5 - COPY TOKEN FROM LOGIN RESPONSE
+REM ==================================================
+
+SET TOKEN=PASTE_ACCESS_TOKEN_HERE
+
+REM ==================================================
+REM 🚀 STEP 6 - VERIFY TOKEN
+REM ==================================================
+
+echo %TOKEN%
+
+REM ==================================================
+REM 🚀 STEP 7 - GET ALL ORDERS
+REM ==================================================
+
+curl -H "Authorization: Bearer %TOKEN%" ^
+%CART_BASE_URL%/api/orders
+
+REM ==================================================
+REM 🚀 STEP 8 - GET SINGLE ORDER
+REM ==================================================
+
+SET ORDER_ID=1
+
+curl -H "Authorization: Bearer %TOKEN%" ^
+%CART_BASE_URL%/api/orders/%ORDER_ID%
+
+REM ==================================================
+REM 🚀 STEP 9 - EXPORT ORDERS CSV
+REM ==================================================
+
+curl -H "Authorization: Bearer %TOKEN%" ^
+%CART_BASE_URL%/api/orders/export/csv ^
+-o orders.csv
+
+REM ==================================================
+REM 🚀 STEP 10 - VERIFY CSV FILE
+REM ==================================================
+
+dir orders.csv
+
+REM ==================================================
+REM 🚀 STEP 11 - OPEN CSV FILE
+REM ==================================================
+
+notepad orders.csv
+
+REM ==================================================
+REM 🚀 STEP  - Only verification command:-
+REM ==================================================
+dir C:\Users\ADMIN\orders.csv
+
+
+REM ==================================================
+REM 🚀 STEP 12 - CANCEL ORDER (OPTIONAL)
+REM ==================================================
+
+curl -X PATCH ^
+-H "Authorization: Bearer %TOKEN%" ^
+%CART_BASE_URL%/api/orders/%ORDER_ID%/cancel
+
+REM ==================================================
+REM 🚀 STEP 13 - LOGOUT (IF IMPLEMENTED)
+REM ==================================================
+
+curl -X POST ^
+-H "Authorization: Bearer %TOKEN%" ^
+%AUTH_BASE_URL%/api/v1/auth/logout
+
+# flask run --host=0.0.0.0 --port=5003
