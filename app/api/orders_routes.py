@@ -36,3 +36,13 @@ def get_order_details(order_id):
 def cancel_order(order_id):
     user_id = get_jwt_identity()
     return OrderService.cancel_order(user_id, order_id)
+
+
+# ============================================================
+# EXPORT ORDERS CSV
+# ============================================================
+@orders_bp.get("/export/csv")
+@jwt_required()
+def export_orders_csv():
+    user_id = get_jwt_identity()
+    return OrderService.export_orders_csv(user_id)
