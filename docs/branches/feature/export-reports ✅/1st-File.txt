@@ -1,0 +1,41 @@
+Nice choice bro 👍
+
+feature/export-reports
+
+is actually better than the very specific names because:
+
+✅ Customer exports can be added later
+✅ Seller exports can be added later
+✅ CSV exports can be added later
+✅ PDF exports can be added later
+✅ Generator optimization can be added later
+✅ No need to rename branch when scope grows
+
+=================================================================
+
+Create same branch in both repos
+Cart Service
+git checkout main
+git pull origin main
+
+git checkout -b feature/export-reports
+
+git push -u origin feature/export-reports
+Angular
+git checkout main
+git pull origin main
+
+git checkout -b feature/export-reports
+
+git push -u origin feature/export-reports
+First Commit
+
+You can simply create a placeholder file:
+
+FEATURE_EXPORT_REPORTS.md
+
+Then:
+
+git add .
+git commit -m "Initialized export reports feature branch"
+git push
