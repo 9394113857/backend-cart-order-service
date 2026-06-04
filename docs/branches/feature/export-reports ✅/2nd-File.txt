@@ -1,0 +1,14 @@
+# Switch to main branch
+git checkout main
+
+# Fetch latest updates from remote
+git fetch origin
+
+# Hard reset local main to match remote main (WARNING: discards local commits)
+git reset --hard origin/main
+
+# Remove untracked files and directories (WARNING: deletes files not in git)
+git clean -fd
+
+# Check final repository status
+git status
