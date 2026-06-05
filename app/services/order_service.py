@@ -99,44 +99,62 @@ class OrderService:
     
     @staticmethod
     def export_orders_csv(user_id):
-        orders = Order.query.filter_by(user_id=user_id).all()
 
-        output = StringIO()
-        writer = csv.writer(output)
+        def generate():
 
-        writer.writerow([
-            "Order ID",
-            "Status",
-            "Total Price",
-            "Created At",
-            "Product ID",
-            "Variant ID",
-            "Quantity",
-            "Price"
-        ])
+            output = StringIO()
+            writer = csv.writer(output)
 
-        for order in orders:
-            items = OrderItem.query.filter_by(
-                order_id=order.id
-            ).all()
+            writer.writerow([
+                "Order ID",
+                "Status",
+                "Total Price",
+                "Created At",
+                "Product ID",
+                "Variant ID",
+                "Quantity",
+                "Price"
+            ])
 
-            for item in items:
-                writer.writerow([
-                    order.id,
-                    order.status,
-                    order.total_price,
-                    order.created_at,
-                    item.product_id,
-                    item.variant_id,
-                    item.quantity,
-                    item.price
-                ])
+            yield output.getvalue()
+            output.seek(0)
+            output.truncate(0)
 
-        response = make_response(output.getvalue())
+            orders = Order.query.filter_by(
+                user_id=user_id
+            )
 
-        response.headers["Content-Type"] = "text/csv"
-        response.headers[
-            "Content-Disposition"
-        ] = "attachment; filename=orders.csv"
+            for order in orders:
 
-        return response
+                items = OrderItem.query.filter_by(
+                    order_id=order.id
+                )
+
+                for item in items:
+
+                    writer.writerow([
+                        order.id,
+                        order.status,
+                        order.total_price,
+                        order.created_at,
+                        item.product_id,
+                        item.variant_id,
+                        item.quantity,
+                        item.price
+                    ])
+
+                    yield output.getvalue()
+
+                    output.seek(0)
+                    output.truncate(0)
+
+        from flask import Response
+
+        return Response(
+            generate(),
+            mimetype="text/csv",
+            headers={
+                "Content-Disposition":
+                "attachment; filename=orders.csv"
+            }
+        )
