@@ -97,14 +97,57 @@ class OrderService:
 
         return jsonify({"message": "Order cancelled"}), 200
     
+# ============================================================
+# EXPORT ORDERS CSV (GENERATOR STREAMING VERSION)
+# ============================================================
     @staticmethod
     def export_orders_csv(user_id):
 
+        # --------------------------------------------------------
+        # STEP 1
+        # Load Orders For Logged-In Customer
+        # --------------------------------------------------------
+        orders = Order.query.filter_by(
+            user_id=user_id
+        ).all()
+
+        # --------------------------------------------------------
+        # STEP 2
+        # Load Everything Before Generator Starts
+        #
+        # Database calls must happen before streaming.
+        # --------------------------------------------------------
+        rows = []
+
+        for order in orders:
+
+            items = OrderItem.query.filter_by(
+                order_id=order.id
+            ).all()
+
+            for item in items:
+
+                rows.append([
+                    order.id,
+                    order.status,
+                    order.total_price,
+                    order.created_at,
+                    item.product_id,
+                    item.variant_id,
+                    item.quantity,
+                    item.price
+                ])
+
+        # --------------------------------------------------------
+        # STEP 3
+        # Generator Function
+        # --------------------------------------------------------
         def generate():
 
             output = StringIO()
             writer = csv.writer(output)
 
+            # CSV Header
             writer.writerow([
                 "Order ID",
                 "Status",
@@ -117,37 +160,24 @@ class OrderService:
             ])
 
             yield output.getvalue()
+
             output.seek(0)
             output.truncate(0)
 
-            orders = Order.query.filter_by(
-                user_id=user_id
-            )
+            # Stream rows one by one
+            for row in rows:
 
-            for order in orders:
+                writer.writerow(row)
 
-                items = OrderItem.query.filter_by(
-                    order_id=order.id
-                )
+                yield output.getvalue()
 
-                for item in items:
+                output.seek(0)
+                output.truncate(0)
 
-                    writer.writerow([
-                        order.id,
-                        order.status,
-                        order.total_price,
-                        order.created_at,
-                        item.product_id,
-                        item.variant_id,
-                        item.quantity,
-                        item.price
-                    ])
-
-                    yield output.getvalue()
-
-                    output.seek(0)
-                    output.truncate(0)
-
+        # --------------------------------------------------------
+        # STEP 4
+        # Return Streaming Response
+        # --------------------------------------------------------
         from flask import Response
 
         return Response(
