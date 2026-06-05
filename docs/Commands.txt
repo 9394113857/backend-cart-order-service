@@ -1,4 +1,4 @@
-# check current branch
+# check current branch   ooo
 git branch
 
 # create & switch to feature branch
