@@ -4,7 +4,12 @@ import os
 
 import csv
 from io import StringIO
-from flask import make_response
+# from flask import make_response
+
+
+from flask import Response
+
+
 
 from ..extensions import db
 from ..models.order import Order
@@ -164,10 +169,18 @@ class OrderService:
             output.seek(0)
             output.truncate(0)
 
-            # Stream rows one by one
-            for row in rows:
+            # ----------------------------------------------------
+            # Stream 100 Rows Per Yield
+            # ----------------------------------------------------
+            batch_size = 100
 
-                writer.writerow(row)
+            for i in range(0, len(rows), batch_size):
+
+                batch = rows[i:i + batch_size]
+
+                for row in batch:
+
+                    writer.writerow(row)
 
                 yield output.getvalue()
 
@@ -178,7 +191,7 @@ class OrderService:
         # STEP 4
         # Return Streaming Response
         # --------------------------------------------------------
-        from flask import Response
+    
 
         return Response(
             generate(),
