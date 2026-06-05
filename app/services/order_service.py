@@ -1,20 +1,17 @@
-from flask import jsonify, request
+from flask import jsonify, request, Response
 import requests
 import os
-
 import csv
 from io import StringIO
-# from flask import make_response
-
-
-from flask import Response
-
-
 
 from ..extensions import db
 from ..models.order import Order
 from ..models.order_item import OrderItem
 
+
+# ============================================================
+# CONFIGURATION
+# ============================================================
 
 PRODUCT_BASE_URL = os.getenv(
     "PRODUCT_BASE_URL",
@@ -22,30 +19,43 @@ PRODUCT_BASE_URL = os.getenv(
 )
 
 
+# ============================================================
+# ORDER SERVICE
+# ============================================================
+
 class OrderService:
-    
+
+    # ========================================================
+    # GET ALL ORDERS OF A USER
+    # ========================================================
     @staticmethod
     def get_orders(user_id):
         orders = Order.query.filter_by(user_id=user_id).all()
 
         return jsonify([
             {
-                "order_id": o.id,
-                "status": o.status,
-                "total_price": o.total_price,
-                "created_at": o.created_at
+                "order_id": order.id,
+                "status": order.status,
+                "total_price": order.total_price,
+                "created_at": order.created_at
             }
-            for o in orders
+            for order in orders
         ]), 200
 
+    # ========================================================
+    # GET SINGLE ORDER DETAILS
+    # ========================================================
     @staticmethod
     def get_order_details(user_id, order_id):
+
         order = Order.query.filter_by(
             id=order_id,
             user_id=user_id
         ).first_or_404()
 
-        items = OrderItem.query.filter_by(order_id=order.id).all()
+        items = OrderItem.query.filter_by(
+            order_id=order.id
+        ).all()
 
         return jsonify({
             "order_id": order.id,
@@ -54,105 +64,85 @@ class OrderService:
             "created_at": order.created_at,
             "items": [
                 {
-                    "product_id": i.product_id,
-                    "variant_id": i.variant_id,
-                    "quantity": i.quantity,
-                    "price": i.price
+                    "product_id": item.product_id,
+                    "variant_id": item.variant_id,
+                    "quantity": item.quantity,
+                    "price": item.price
                 }
-                for i in items
+                for item in items
             ]
         }), 200
 
+    # ========================================================
+    # CANCEL ORDER
+    # ========================================================
     @staticmethod
     def cancel_order(user_id, order_id):
+
         order = Order.query.filter_by(
             id=order_id,
             user_id=user_id
         ).first_or_404()
 
+        # Only placed orders can be cancelled
         if order.status != "placed":
-            return jsonify({"error": "Order cannot be cancelled"}), 400
+            return jsonify({
+                "error": "Order cannot be cancelled"
+            }), 400
 
-        items = OrderItem.query.filter_by(order_id=order.id).all()
+        items = OrderItem.query.filter_by(
+            order_id=order.id
+        ).all()
 
+        # Payload for Product Service
         payload = {
             "items": [
                 {
-                    "product_id": i.product_id,
-                    "variant_id": i.variant_id,
-                    "quantity": i.quantity
+                    "product_id": item.product_id,
+                    "variant_id": item.variant_id,
+                    "quantity": item.quantity
                 }
-                for i in items
+                for item in items
             ]
         }
 
-        resp = requests.post(
+        # Restore stock in Product Service
+        response = requests.post(
             f"{PRODUCT_BASE_URL}/api/v1/products/restore-stock",
             json=payload,
             headers={
-                "Authorization": request.headers.get("Authorization")
+                "Authorization": request.headers.get(
+                    "Authorization"
+                )
             }
         )
 
-        if resp.status_code != 200:
-            return jsonify({"error": "Stock restore failed"}), 500
+        if response.status_code != 200:
+            return jsonify({
+                "error": "Stock restore failed"
+            }), 500
 
         order.status = "cancelled"
         db.session.commit()
 
-        return jsonify({"message": "Order cancelled"}), 200
-    
-# ============================================================
-# EXPORT ORDERS CSV (GENERATOR STREAMING VERSION)                       
-# ============================================================
+        return jsonify({
+            "message": "Order cancelled"
+        }), 200
+
+    # ========================================================
+    # EXPORT ORDERS AS CSV (STREAMING)
+    # ========================================================
     @staticmethod
     def export_orders_csv(user_id):
 
-        # --------------------------------------------------------
-        # STEP 1
-        # Load Orders For Logged-In Customer
-        # --------------------------------------------------------
-        orders = Order.query.filter_by(
-            user_id=user_id
-        ).all()
-
-        # --------------------------------------------------------
-        # STEP 2
-        # Load Everything Before Generator Starts
-        #
-        # Database calls must happen before streaming.
-        # --------------------------------------------------------
-        rows = []
-
-        for order in orders:
-
-            items = OrderItem.query.filter_by(
-                order_id=order.id
-            ).all()
-
-            for item in items:
-
-                rows.append([
-                    order.id,
-                    order.status,
-                    order.total_price,
-                    order.created_at,
-                    item.product_id,
-                    item.variant_id,
-                    item.quantity,
-                    item.price
-                ])
-
-        # --------------------------------------------------------
-        # STEP 3
-        # Generator Function
-        # --------------------------------------------------------
         def generate():
 
             output = StringIO()
             writer = csv.writer(output)
 
-            # CSV Header
+            # ------------------------------------------------
+            # CSV HEADER
+            # ------------------------------------------------
             writer.writerow([
                 "Order ID",
                 "Status",
@@ -169,29 +159,53 @@ class OrderService:
             output.seek(0)
             output.truncate(0)
 
-            # ----------------------------------------------------
-            # Stream 100 Rows Per Yield
-            # ----------------------------------------------------
-            batch_size = 100
+            print(
+                f"CSV Export Started For User {user_id}"
+            )
 
-            for i in range(0, len(rows), batch_size):
+            orders = (
+                Order.query
+                .filter_by(user_id=user_id)
+                .yield_per(50)
+            )
 
-                batch = rows[i:i + batch_size]
+            total_orders = 0
 
-                for row in batch:
+            # ------------------------------------------------
+            # PROCESS ORDERS
+            # ------------------------------------------------
+            for order in orders:
 
-                    writer.writerow(row)
+                total_orders += 1
 
-                yield output.getvalue()
+                items = (
+                    OrderItem.query
+                    .filter_by(order_id=order.id)
+                    .all()
+                )
 
-                output.seek(0)
-                output.truncate(0)
+                for item in items:
 
-        # --------------------------------------------------------
-        # STEP 4
-        # Return Streaming Response
-        # --------------------------------------------------------
-    
+                    writer.writerow([
+                        order.id,
+                        order.status,
+                        order.total_price,
+                        order.created_at,
+                        item.product_id,
+                        item.variant_id,
+                        item.quantity,
+                        item.price
+                    ])
+
+                    yield output.getvalue()
+
+                    output.seek(0)
+                    output.truncate(0)
+
+            print(
+                "CSV Export Completed. "
+                f"Orders Processed = {total_orders}"
+            )
 
         return Response(
             generate(),
