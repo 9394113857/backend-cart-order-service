@@ -12,22 +12,39 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
+      # ====================================
+      # Checkout
+      # ====================================
       - name: Checkout
         uses: actions/checkout@v3
 
+      # ====================================
+      # Setup Python
+      # ====================================
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.11"
 
+      # ====================================
+      # Install Dependencies
+      # ====================================
       - name: Install Dependencies
         run: |
           pip install -r requirements.txt
           pip install pytest
 
+      # ====================================
+      # Run Tests
+      # ====================================
       - name: Run Tests
-        run: PYTHONPATH=. pytest -v
+        run: |
+          PYTHONPATH=. pytest -v
 
+      # ====================================
+      # Set Version
+      # ====================================
       - name: Set Version
         run: |
           if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
@@ -37,14 +54,55 @@ jobs:
             VERSION=dev-${GITHUB_SHA}
             BRANCH=${GITHUB_REF#refs/heads/}
           fi
+
           echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
           echo "APP_BRANCH=$BRANCH" >> $GITHUB_ENV
 
+          echo "Version: $VERSION"
+          echo "Branch : $BRANCH"
+
+      # ====================================
+      # Docker Login
+      # ====================================
       - name: Docker Login
-        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+        run: |
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login \
+          -u "${{ secrets.DOCKERHUB_USERNAME }}" \
+          --password-stdin
 
+      # ====================================
+      # Build Docker Image
+      # ====================================
       - name: Build Image
-        run: docker build -t pythoncodelife/backend-cart-order-service:${{ env.APP_VERSION }} .
+        run: |
+          docker build \
+            --build-arg APP_VERSION=${{ env.APP_VERSION }} \
+            --build-arg APP_COMMIT=${{ github.sha }} \
+            --build-arg APP_BRANCH=${{ env.APP_BRANCH }} \
+            -t pythoncodelife/backend-cart-order-service:${{ env.APP_VERSION }} \
+            -t pythoncodelife/backend-cart-order-service:latest \
+            .
 
+      # ====================================
+      # Push Docker Images
+      # ====================================
       - name: Push Image
-        run: docker push pythoncodelife/backend-cart-order-service:${{ env.APP_VERSION }}
+        run: |
+          docker push pythoncodelife/backend-cart-order-service:${{ env.APP_VERSION }}
+          docker push pythoncodelife/backend-cart-order-service:latest
+
+      # ====================================
+      # Build Summary
+      # ====================================
+      - name: Build Summary
+        run: |
+          echo "================================="
+          echo "Build Completed Successfully"
+          echo "================================="
+          echo "Version : ${{ env.APP_VERSION }}"
+          echo "Branch  : ${{ env.APP_BRANCH }}"
+          echo "Commit  : ${{ github.sha }}"
+          echo "Docker Images Pushed:"
+          echo "pythoncodelife/backend-cart-order-service:${{ env.APP_VERSION }}"
+          echo "pythoncodelife/backend-cart-order-service:latest"
+          echo "================================="
