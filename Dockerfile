@@ -38,4 +38,4 @@ with open("build_info.json", "w") as f:
 EOF
 
 # 🚀 Run
-CMD ["sh", "-c", "gunicorn run:app -w 1 -b 0.0.0.0:$PORT --access-logfile - --error-logfile -"]
+CMD ["sh", "-c", "gunicorn run:app -w 1 -b 0.0.0.0:$PORT --timeout 120 --access-logfile - --error-logfile -"]
