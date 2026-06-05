@@ -49,7 +49,7 @@ jobs:
         run: |
           if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/}
-            BRANCH="release"
+            BRANCH="main"
           else
             VERSION=dev-${GITHUB_SHA}
             BRANCH=${GITHUB_REF#refs/heads/}
