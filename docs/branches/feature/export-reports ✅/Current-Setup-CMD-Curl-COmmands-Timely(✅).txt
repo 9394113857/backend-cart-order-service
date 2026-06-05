@@ -103,4 +103,5 @@ curl -X POST ^
 -H "Authorization: Bearer %TOKEN%" ^
 %AUTH_BASE_URL%/api/v1/auth/logout
 
-# flask run --host=0.0.0.0 --port=5003
+# Run the app now:-
+flask run --host=0.0.0.0 --port=5003

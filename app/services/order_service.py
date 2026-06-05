@@ -4,7 +4,12 @@ import os
 
 import csv
 from io import StringIO
-from flask import make_response
+# from flask import make_response
+
+
+from flask import Response
+
+
 
 from ..extensions import db
 from ..models.order import Order
@@ -97,31 +102,37 @@ class OrderService:
 
         return jsonify({"message": "Order cancelled"}), 200
     
+# ============================================================
+# EXPORT ORDERS CSV (GENERATOR STREAMING VERSION)                       
+# ============================================================
     @staticmethod
     def export_orders_csv(user_id):
-        orders = Order.query.filter_by(user_id=user_id).all()
 
-        output = StringIO()
-        writer = csv.writer(output)
+        # --------------------------------------------------------
+        # STEP 1
+        # Load Orders For Logged-In Customer
+        # --------------------------------------------------------
+        orders = Order.query.filter_by(
+            user_id=user_id
+        ).all()
 
-        writer.writerow([
-            "Order ID",
-            "Status",
-            "Total Price",
-            "Created At",
-            "Product ID",
-            "Variant ID",
-            "Quantity",
-            "Price"
-        ])
+        # --------------------------------------------------------
+        # STEP 2
+        # Load Everything Before Generator Starts
+        #
+        # Database calls must happen before streaming.
+        # --------------------------------------------------------
+        rows = []
 
         for order in orders:
+
             items = OrderItem.query.filter_by(
                 order_id=order.id
             ).all()
 
             for item in items:
-                writer.writerow([
+
+                rows.append([
                     order.id,
                     order.status,
                     order.total_price,
@@ -132,11 +143,61 @@ class OrderService:
                     item.price
                 ])
 
-        response = make_response(output.getvalue())
+        # --------------------------------------------------------
+        # STEP 3
+        # Generator Function
+        # --------------------------------------------------------
+        def generate():
 
-        response.headers["Content-Type"] = "text/csv"
-        response.headers[
-            "Content-Disposition"
-        ] = "attachment; filename=orders.csv"
+            output = StringIO()
+            writer = csv.writer(output)
 
-        return response
+            # CSV Header
+            writer.writerow([
+                "Order ID",
+                "Status",
+                "Total Price",
+                "Created At",
+                "Product ID",
+                "Variant ID",
+                "Quantity",
+                "Price"
+            ])
+
+            yield output.getvalue()
+
+            output.seek(0)
+            output.truncate(0)
+
+            # ----------------------------------------------------
+            # Stream 100 Rows Per Yield
+            # ----------------------------------------------------
+            batch_size = 100
+
+            for i in range(0, len(rows), batch_size):
+
+                batch = rows[i:i + batch_size]
+
+                for row in batch:
+
+                    writer.writerow(row)
+
+                yield output.getvalue()
+
+                output.seek(0)
+                output.truncate(0)
+
+        # --------------------------------------------------------
+        # STEP 4
+        # Return Streaming Response
+        # --------------------------------------------------------
+    
+
+        return Response(
+            generate(),
+            mimetype="text/csv",
+            headers={
+                "Content-Disposition":
+                "attachment; filename=orders.csv"
+            }
+        )
