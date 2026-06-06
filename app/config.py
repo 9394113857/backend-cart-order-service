@@ -9,9 +9,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # 🔹 Print DATABASE_URL for debugging (remove in production!)
-print("=" * 60)
-print("DATABASE_URL =", os.getenv("DATABASE_URL"))
-print("=" * 60)
+# print("=" * 60)
+# print("DATABASE_URL =", os.getenv("DATABASE_URL"))
+# print("=" * 60)
 
 
 class Config:
