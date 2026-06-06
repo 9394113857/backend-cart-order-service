@@ -30,7 +30,10 @@ class OrderService:
     # ========================================================
     @staticmethod
     def get_orders(user_id):
-        orders = Order.query.filter_by(user_id=user_id).all()
+
+        orders = Order.query.filter_by(
+            user_id=user_id
+        ).all()
 
         return jsonify([
             {
@@ -84,7 +87,6 @@ class OrderService:
             user_id=user_id
         ).first_or_404()
 
-        # Only placed orders can be cancelled
         if order.status != "placed":
             return jsonify({
                 "error": "Order cannot be cancelled"
@@ -94,7 +96,6 @@ class OrderService:
             order_id=order.id
         ).all()
 
-        # Payload for Product Service
         payload = {
             "items": [
                 {
@@ -106,7 +107,6 @@ class OrderService:
             ]
         }
 
-        # Restore stock in Product Service
         response = requests.post(
             f"{PRODUCT_BASE_URL}/api/v1/products/restore-stock",
             json=payload,
@@ -130,85 +130,50 @@ class OrderService:
         }), 200
 
     # ========================================================
-    # EXPORT ORDERS AS CSV (STREAMING)
+    # EXPORT ORDERS AS CSV
     # ========================================================
     @staticmethod
     def export_orders_csv(user_id):
 
-        def generate():
+        orders = Order.query.filter_by(
+            user_id=user_id
+        ).all()
 
-            output = StringIO()
-            writer = csv.writer(output)
+        output = StringIO()
+        writer = csv.writer(output)
 
-            # ------------------------------------------------
-            # CSV HEADER
-            # ------------------------------------------------
-            writer.writerow([
-                "Order ID",
-                "Status",
-                "Total Price",
-                "Created At",
-                "Product ID",
-                "Variant ID",
-                "Quantity",
-                "Price"
-            ])
+        writer.writerow([
+            "Order ID",
+            "Status",
+            "Total Price",
+            "Created At",
+            "Product ID",
+            "Variant ID",
+            "Quantity",
+            "Price"
+        ])
 
-            yield output.getvalue()
+        for order in orders:
 
-            output.seek(0)
-            output.truncate(0)
+            items = OrderItem.query.filter_by(
+                order_id=order.id
+            ).all()
 
-            print(
-                f"CSV Export Started For User {user_id}"
-            )
+            for item in items:
 
-            orders = (
-                Order.query
-                .filter_by(user_id=user_id)
-                .yield_per(50)
-            )
-
-            total_orders = 0
-
-            # ------------------------------------------------
-            # PROCESS ORDERS
-            # ------------------------------------------------
-            for order in orders:
-
-                total_orders += 1
-
-                items = (
-                    OrderItem.query
-                    .filter_by(order_id=order.id)
-                    .all()
-                )
-
-                for item in items:
-
-                    writer.writerow([
-                        order.id,
-                        order.status,
-                        order.total_price,
-                        order.created_at,
-                        item.product_id,
-                        item.variant_id,
-                        item.quantity,
-                        item.price
-                    ])
-
-                    yield output.getvalue()
-
-                    output.seek(0)
-                    output.truncate(0)
-
-            print(
-                "CSV Export Completed. "
-                f"Orders Processed = {total_orders}"
-            )
+                writer.writerow([
+                    order.id,
+                    order.status,
+                    order.total_price,
+                    order.created_at,
+                    item.product_id,
+                    item.variant_id,
+                    item.quantity,
+                    item.price
+                ])
 
         return Response(
-            generate(),
+            output.getvalue(),
             mimetype="text/csv",
             headers={
                 "Content-Disposition":
