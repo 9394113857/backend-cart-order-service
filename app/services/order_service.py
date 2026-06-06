@@ -8,6 +8,8 @@ from ..extensions import db
 from ..models.order import Order
 from ..models.order_item import OrderItem
 
+from .order_event_service import OrderEventService
+
 
 # ============================================================
 # CONFIGURATION
@@ -123,7 +125,13 @@ class OrderService:
             }), 500
 
         order.status = "cancelled"
+
         db.session.commit()
+
+        OrderEventService.create_event(
+            order.id,
+            "ORDER_CANCELLED"
+        )
 
         return jsonify({
             "message": "Order cancelled"
