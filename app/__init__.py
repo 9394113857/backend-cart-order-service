@@ -76,6 +76,17 @@ def create_app(testing: bool = False):
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
+    
+    # =====================================================
+    # 📦 LOAD MODELS FOR SQLALCHEMY / ALEMBIC
+    # =====================================================
+    from .models.cart_item import CartItem
+    from .models.order import Order
+    from .models.order_item import OrderItem
+
+    from .models.order_event import OrderEvent
+    from .models.invoice_history import InvoiceHistory
+    from .models.order_analytics import OrderAnalytics
 
     # =====================================================
     # 🆔 REQUEST ID

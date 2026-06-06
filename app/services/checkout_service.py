@@ -6,6 +6,8 @@ from ..models.cart_item import CartItem
 from ..models.order import Order
 from ..models.order_item import OrderItem
 
+from .order_event_service import OrderEventService
+
 
 class CheckoutService:
 
@@ -51,16 +53,23 @@ class CheckoutService:
             db.session.flush()
 
             for c in cart_items:
-                db.session.add(OrderItem(
-                    order_id=order.id,
-                    product_id=c.product_id,
-                    variant_id=c.variant_id,
-                    quantity=c.quantity,
-                    price=c.price
-                ))
+                db.session.add(
+                    OrderItem(
+                        order_id=order.id,
+                        product_id=c.product_id,
+                        variant_id=c.variant_id,
+                        quantity=c.quantity,
+                        price=c.price
+                    )
+                )
                 db.session.delete(c)
 
             db.session.commit()
+
+            OrderEventService.create_event(
+                order.id,
+                "ORDER_PLACED"
+            )
 
             return jsonify({
                 "order_id": order.id,
