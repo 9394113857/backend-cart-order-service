@@ -135,9 +135,13 @@ class OrderService:
     @staticmethod
     def export_orders_csv(user_id):
 
-        orders = Order.query.filter_by(
-            user_id=user_id
-        ).all()
+        orders = Order.query.filter(
+            Order.user_id == user_id,
+            Order.status.in_([
+                "placed",
+                "delivered"
+            ])
+        ).all()  # Only export placed and delivered orders
 
         output = StringIO()
         writer = csv.writer(output)
