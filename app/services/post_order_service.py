@@ -1,15 +1,22 @@
 import os
 import json
+import threading
 from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor
 
 
 class PostOrderService:
+    # Thread pool executor for handling file I/O operations asynchronously
+    executor = ThreadPoolExecutor(max_workers=3)
 
     # ============================================================
     # INVOICE FILE
     # ============================================================
     @staticmethod
     def save_invoice_file(order_id, total_price, status):
+        print(
+            f"Invoice Thread = {threading.current_thread().name}"
+        )
 
         invoices_dir = os.path.join(
             os.getcwd(),
@@ -39,6 +46,9 @@ class PostOrderService:
     # ============================================================
     @staticmethod
     def save_analytics_file(order_id, total_price, status):
+        print(
+            f"Analytics Thread = {threading.current_thread().name}"
+        )
 
         analytics_dir = os.path.join(
             os.getcwd(),
@@ -68,6 +78,9 @@ class PostOrderService:
     # ============================================================
     @staticmethod
     def save_audit_file(order_id, status):
+        print(
+            f"Audit Thread = {threading.current_thread().name}"
+        )
 
         audit_dir = os.path.join(
             os.getcwd(),
@@ -88,3 +101,32 @@ class PostOrderService:
                 f"STATUS={status}\n"
                 f"TIMESTAMP={datetime.utcnow().isoformat()}\n"
             )
+
+    # ============================================================
+    # MULTITHREADED FILE GENERATION
+    # ============================================================
+    @staticmethod
+    def process_order_files(
+        order_id,
+        total_price,
+        status
+    ):
+        PostOrderService.executor.submit(
+            PostOrderService.save_invoice_file,
+            order_id,
+            total_price,
+            status
+        )
+
+        PostOrderService.executor.submit(
+            PostOrderService.save_analytics_file,
+            order_id,
+            total_price,
+            status
+        )
+
+        PostOrderService.executor.submit(
+            PostOrderService.save_audit_file,
+            order_id,
+            status
+        )
