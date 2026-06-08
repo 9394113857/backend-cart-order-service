@@ -46,7 +46,7 @@ You are inside VS Code → PowerShell.
 #🔹 Command 1: Set DB URL (TEMP):-
 $env:DATABASE_URL="postgresql://postgres.grbywzrtwirkgrlsxnig:Raghunadh_1992@aws-1-ap-south-1.pooler.supabase.com:5432/postgres"
 
-✅ This sets DB URL only for this terminal session.
+# ✅ This sets DB URL only for this terminal session.
 
 🔹 Command 2: Run Alembic migration (tables creation):
 flask db upgrade

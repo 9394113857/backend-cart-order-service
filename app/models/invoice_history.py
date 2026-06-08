@@ -1,7 +1,7 @@
 from datetime import datetime
 from app.extensions import db
 
-
+# This model keeps track of the history of invoices for each order. It allows us to maintain a record of all invoice versions and their statuses, which can be useful for auditing and troubleshooting purposes.
 class InvoiceHistory(db.Model):
     __tablename__ = "invoice_history"
 
