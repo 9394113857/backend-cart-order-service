@@ -7,6 +7,8 @@ from ..models.order import Order
 from ..models.order_item import OrderItem
 
 from .order_event_service import OrderEventService
+from .invoice_history_service import InvoiceHistoryService
+from .order_analytics_service import OrderAnalyticsService
 
 
 class CheckoutService:
@@ -66,9 +68,23 @@ class CheckoutService:
 
             db.session.commit()
 
+            # Create order event
             OrderEventService.create_event(
                 order.id,
                 "ORDER_PLACED"
+            )
+
+            # Create invoice history record
+            InvoiceHistoryService.create_record(
+                order.id,
+                "CREATED"
+            )
+
+            # Create analytics record
+            OrderAnalyticsService.create_record(
+                order.id,
+                order.total_price,
+                order.status
             )
 
             return jsonify({

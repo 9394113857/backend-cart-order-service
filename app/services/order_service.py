@@ -9,6 +9,8 @@ from ..models.order import Order
 from ..models.order_item import OrderItem
 
 from .order_event_service import OrderEventService
+from .invoice_history_service import InvoiceHistoryService
+from .order_analytics_service import OrderAnalyticsService
 
 
 # ============================================================
@@ -116,7 +118,8 @@ class OrderService:
                 "Authorization": request.headers.get(
                     "Authorization"
                 )
-            }
+            },
+            timeout=5
         )
 
         if response.status_code != 200:
@@ -128,9 +131,23 @@ class OrderService:
 
         db.session.commit()
 
+        # Order Event
         OrderEventService.create_event(
             order.id,
             "ORDER_CANCELLED"
+        )
+
+        # Invoice History
+        InvoiceHistoryService.create_record(
+            order.id,
+            "CANCELLED"
+        )
+
+        # Analytics
+        OrderAnalyticsService.create_record(
+            order.id,
+            order.total_price,
+            order.status
         )
 
         return jsonify({
@@ -143,8 +160,6 @@ class OrderService:
     @staticmethod
     def export_orders_csv(user_id):
 
-        # Get ALL orders for the user
-        # Includes placed, delivered and cancelled orders
         orders = Order.query.filter_by(
             user_id=user_id
         ).all()
@@ -170,7 +185,6 @@ class OrderService:
             ).all()
 
             for item in items:
-
                 writer.writerow([
                     order.id,
                     order.status,
@@ -187,6 +201,6 @@ class OrderService:
             mimetype="text/csv",
             headers={
                 "Content-Disposition":
-                "attachment; filename=orders.csv"
+                    "attachment; filename=orders.csv"
             }
         )
