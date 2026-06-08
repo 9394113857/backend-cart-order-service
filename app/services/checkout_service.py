@@ -9,6 +9,7 @@ from ..models.order_item import OrderItem
 from .order_event_service import OrderEventService
 from .invoice_history_service import InvoiceHistoryService
 from .order_analytics_service import OrderAnalyticsService
+from .post_order_service import PostOrderService
 
 
 class CheckoutService:
@@ -64,6 +65,7 @@ class CheckoutService:
                         price=c.price
                     )
                 )
+
                 db.session.delete(c)
 
             db.session.commit()
@@ -87,11 +89,23 @@ class CheckoutService:
                 order.status
             )
 
+            # Generate invoice, analytics and audit files asynchronously
+            PostOrderService.process_order_files(
+                order.id,
+                order.total_price,
+                order.status
+            )
+
             return jsonify({
                 "order_id": order.id,
                 "status": "placed"
             }), 201
 
         except Exception as e:
-            current_app.logger.error(f"Checkout error: {str(e)}")
-            return jsonify({"error": str(e)}), 500
+            current_app.logger.error(
+                f"Checkout error: {str(e)}"
+            )
+
+            return jsonify({
+                "error": str(e)
+            }), 500
