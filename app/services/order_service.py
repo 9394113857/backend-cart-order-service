@@ -35,19 +35,67 @@ class OrderService:
     @staticmethod
     def get_orders(user_id):
 
-        orders = Order.query.filter_by(
-            user_id=user_id
-        ).all()
+        page = request.args.get(
+            "page",
+            1,
+            type=int
+        )
 
-        return jsonify([
-            {
-                "order_id": order.id,
-                "status": order.status,
-                "total_price": order.total_price,
-                "created_at": order.created_at
+        size = request.args.get(
+            "size",
+            10,
+            type=int
+        )
+
+        status = request.args.get("status")
+
+        print(f"PAGE={page}")
+        print(f"SIZE={size}")
+        print(f"STATUS={status}")
+
+        # Base query
+        query = Order.query.filter_by(
+            user_id=user_id
+        )
+
+        # Optional status filter
+        if status:
+            query = query.filter(
+                Order.status == status
+            )
+
+        # Pagination
+        pagination = query.order_by(
+            Order.created_at.desc()
+        ).paginate(
+            page=page,
+            per_page=size,
+            error_out=False
+        )
+
+        orders = pagination.items
+
+        print(f"TOTAL_ORDERS={pagination.total}")
+
+        return jsonify({
+            "orders": [
+                {
+                    "order_id": order.id,
+                    "status": order.status,
+                    "total_price": order.total_price,
+                    "created_at": order.created_at
+                }
+                for order in orders
+            ],
+            "pagination": {
+                "page": pagination.page,
+                "size": pagination.per_page,
+                "total_records": pagination.total,
+                "total_pages": pagination.pages,
+                "has_next": pagination.has_next,
+                "has_prev": pagination.has_prev
             }
-            for order in orders
-        ]), 200
+        }), 200
 
     # ========================================================
     # GET SINGLE ORDER DETAILS
@@ -201,6 +249,6 @@ class OrderService:
             mimetype="text/csv",
             headers={
                 "Content-Disposition":
-                    "attachment; filename=orders.csv"
+                "attachment; filename=orders.csv"
             }
         )
