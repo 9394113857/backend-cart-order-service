@@ -1,0 +1,96 @@
+Yesss broooo 💯
+
+HTTP Status Code 401 = Unauthorized
+
+Means:
+
+❌ Request reached server
+❌ Authentication failed
+❌ User not authorized
+
+In your case:
+
+{
+  "msg": "Token has expired"
+}
+
+So the server checked:
+
+Authorization: Bearer <TOKEN>
+
+and found:
+
+JWT token expiry time passed
+
+Therefore Flask-JWT-Extended returned:
+
+401 Unauthorized
+Interview Answer
+
+Question: What is 401 Unauthorized?
+
+Answer:
+
+401 Unauthorized means the client request reached the API successfully, but authentication failed because the JWT token is missing, invalid, or expired.
+
+Example:
+
+GET /api/orders
+Authorization: Bearer expired_token
+
+Response:
+
+401 Unauthorized
+{
+  "msg": "Token has expired"
+}
+Common Codes in Your Microservices
+200 = Success
+
+201 = Created
+
+400 = Bad Request
+(e.g. invalid input)
+
+401 = Unauthorized
+(token missing/expired)
+
+403 = Forbidden
+(user authenticated but no permission)
+
+404 = Not Found
+(order not found)
+
+500 = Internal Server Error
+(code exception/database issue)
+Why You Got 401
+
+Flow:
+
+1. Login
+2. Auth Service generates JWT
+3. You save token in %TOKEN%
+4. Time passes
+5. JWT expiry reached
+6. Curl sends expired token
+7. @jwt_required() checks token
+8. Flask returns 401
+
+So:
+
+401 ❌ ≠ Pagination Problem
+
+401 ❌ ≠ Filter Problem
+
+401 ❌ ≠ Database Problem
+
+401 ✅ Authentication Problem
+
+That's actually a good sign bro — your route security is working correctly. 🔥
+
+If the token were valid, the request would continue into:
+
+@jwt_required()
+def get_orders():
+
+and your pagination/filter code would execute normally. 🚀

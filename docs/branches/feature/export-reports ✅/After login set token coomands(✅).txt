@@ -1,0 +1,49 @@
+Ahhhh broooo 😄 now I understand.
+
+You want runtime curl commands that save output to JSON files.
+
+Save All Orders
+curl -H "Authorization: Bearer %TOKEN%" "http://127.0.0.1:5003/api/orders" > all_orders.json
+
+Save Cancelled Orders
+curl -H "Authorization: Bearer %TOKEN%" "http://127.0.0.1:5003/api/orders?status=cancelled" > cancelled_orders.json
+
+Save Placed Orders
+curl -H "Authorization: Bearer %TOKEN%" "http://127.0.0.1:5003/api/orders?status=placed" > placed_orders.json
+
+Save Processing Orders
+curl -H "Authorization: Bearer %TOKEN%" "http://127.0.0.1:5003/api/orders?status=processing" > processing_orders.json
+
+Save Shipped Orders
+curl -H "Authorization: Bearer %TOKEN%" "http://127.0.0.1:5003/api/orders?status=shipped" > shipped_orders.json
+
+Save Delivered Orders
+curl -H "Authorization: Bearer %TOKEN%" "http://127.0.0.1:5003/api/orders?status=delivered" > delivered_orders.json
+
+Save Page 1
+curl -H "Authorization: Bearer %TOKEN%" "http://127.0.0.1:5003/api/orders?page=1&size=10" > page1.json
+
+Save Page 2
+curl -H "Authorization: Bearer %TOKEN%" "http://127.0.0.1:5003/api/orders?page=2&size=10" > page2.json
+
+Save Cancelled + Pagination
+curl -H "Authorization: Bearer %TOKEN%" "http://127.0.0.1:5003/api/orders?status=cancelled&page=1&size=5" > cancelled_page1.json
+
+Open Any JSON
+notepad cancelled_orders.json
+
+or
+
+notepad page1.json
+Useful Interview Demo Commands
+curl -H "Authorization: Bearer %TOKEN%" "http://127.0.0.1:5003/api/orders" > all_orders.json
+
+curl -H "Authorization: Bearer %TOKEN%" "http://127.0.0.1:5003/api/orders?status=cancelled" > cancelled_orders.json
+
+curl -H "Authorization: Bearer %TOKEN%" "http://127.0.0.1:5003/api/orders?page=1&size=10" > page1.json
+
+curl -H "Authorization: Bearer %TOKEN%" "http://127.0.0.1:5003/api/orders?status=cancelled&page=1&size=5" > cancelled_page1.json
+
+curl -H "Authorization: Bearer %TOKEN%" "http://127.0.0.1:5003/api/orders/2030" > order_2030.json
+
+These commands create JSON files you can immediately share, inspect, or use for Angular testing. 🚀
