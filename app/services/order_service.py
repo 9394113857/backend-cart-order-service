@@ -49,9 +49,15 @@ class OrderService:
 
         status = request.args.get("status")
 
+        order_id = request.args.get(
+            "order_id",
+            type=int
+        )
+
         print(f"PAGE={page}")
         print(f"SIZE={size}")
         print(f"STATUS={status}")
+        print(f"ORDER_ID={order_id}")
 
         # Base query
         query = Order.query.filter_by(
@@ -62,6 +68,12 @@ class OrderService:
         if status:
             query = query.filter(
                 Order.status == status
+            )
+
+        # Optional order id filter
+        if order_id:
+            query = query.filter(
+                Order.id == order_id
             )
 
         # Pagination

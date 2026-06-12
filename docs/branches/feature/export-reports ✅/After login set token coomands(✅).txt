@@ -47,3 +47,41 @@ curl -H "Authorization: Bearer %TOKEN%" "http://127.0.0.1:5003/api/orders?status
 curl -H "Authorization: Bearer %TOKEN%" "http://127.0.0.1:5003/api/orders/2030" > order_2030.json
 
 These commands create JSON files you can immediately share, inspect, or use for Angular testing. 🚀
+
+=============
+12-6-26 ✅👍 Working Commands 
+=============
+REM ==================================================
+REM ORDER SEARCH + FILTER TESTING (VIEW JSON IN CMD)
+REM ==================================================
+
+REM 1. Search Specific Order ID
+curl -H "Authorization: Bearer %TOKEN%" "http://127.0.0.1:5003/api/orders?order_id=2030"
+
+REM 2. Search Non-Existing Order ID
+curl -H "Authorization: Bearer %TOKEN%" "http://127.0.0.1:5003/api/orders?order_id=999999"
+
+REM 3. Status Filter (Cancelled Orders)
+curl -H "Authorization: Bearer %TOKEN%" "http://127.0.0.1:5003/api/orders?status=cancelled"
+
+REM 4. Status Filter + Pagination
+curl -H "Authorization: Bearer %TOKEN%" "http://127.0.0.1:5003/api/orders?status=cancelled&page=1&size=10"
+
+REM ==================================================
+REM ORDER SEARCH + FILTER TESTING (EXPORT JSON FILES)
+REM ==================================================
+
+REM 1. Export Specific Order
+curl -H "Authorization: Bearer %TOKEN%" "http://127.0.0.1:5003/api/orders?order_id=2030" > order_2030.json
+
+REM 2. Export Non-Existing Order Result
+curl -H "Authorization: Bearer %TOKEN%" "http://127.0.0.1:5003/api/orders?order_id=999999" > order_not_found.json
+
+REM 3. Export Cancelled Orders
+curl -H "Authorization: Bearer %TOKEN%" "http://127.0.0.1:5003/api/orders?status=cancelled" > cancelled_orders.json
+
+REM 4. Export Cancelled Orders Page 1
+curl -H "Authorization: Bearer %TOKEN%" "http://127.0.0.1:5003/api/orders?status=cancelled&page=1&size=10" > cancelled_page1.json
+
+REM Verify JSON Files Created
+dir *.json
