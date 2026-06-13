@@ -1,0 +1,6 @@
+In Ci File also Add like Emails like in Auth Service
+
+In Auth Service ci and cd emails also like some wrong we have to enhance again and checka ndo likewsie 
+
+So ame with Prodcut also cia nedc d soa ll microserves same pattern we shodul follow anyways follow across same oaky.
+
