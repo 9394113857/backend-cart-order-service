@@ -1,0 +1,19 @@
+Write-Host ""
+Write-Host "======================================="
+Write-Host "🧹 Checking for existing virtual environment..."
+Write-Host "======================================="
+Write-Host ""
+
+if (Test-Path ".venv") {
+    Write-Host "📂 Found .venv"
+    Write-Host "🗑️ Removing..."
+    Remove-Item -Recurse -Force ".venv"
+    Write-Host "✅ .venv removed successfully."
+} else {
+    Write-Host "ℹ️ No .venv folder found."
+    Write-Host "⏭️ Skipping deletion."
+}
+
+Write-Host ""
+Write-Host "🎉 Done!"
+Write-Host "Ready to create a fresh environment."
