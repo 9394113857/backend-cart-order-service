@@ -1,136 +1,369 @@
 # =====================================================
-# 🚀 CD - Render Deploy (PRODUCTION SAFE FINAL)
+# 🚀 CD - Cart Order Service Render (FINAL PRODUCTION)
 # =====================================================
 
-name: 🚀 CD - Render Deploy
+name: 🚀 CD - Cart Order Service Render
+
 
 on:
+
   workflow_dispatch:
+
+
   schedule:
-    - cron: "30 20 * * *"   # 2:00 AM IST
+
+    # 2:00 AM IST
+    - cron: "30 20 * * *"
+
+
 
 jobs:
+
+
   deploy:
+
+
+    name: 🚀 Deploy Cart Order Service
+
+
     runs-on: ubuntu-latest
+
+
 
     steps:
 
-      # =========================
-      # 🟢 Checkout
-      # =========================
+
+
+      # =====================================================
+      # 📦 CHECKOUT
+      # =====================================================
+
       - name: Checkout
-        uses: actions/checkout@v3
+
+        uses: actions/checkout@v4
+
         with:
+
           fetch-depth: 0
 
-      # =========================
-      # 🟢 Fetch Tags
-      # =========================
-      - name: Fetch Tags
-        run: git fetch --tags
+          fetch-tags: true
 
-      # =========================
-      # 🟢 Detect Version
-      # =========================
-      - name: Detect Version
+
+
+
+      # =====================================================
+      # 🏷️ VERSION METADATA
+      # =====================================================
+
+      - name: Detect Deployment Metadata
+
         run: |
+
+
           TAGS=($(git tag --sort=-v:refname))
 
-          if [ ${#TAGS[@]} -eq 0 ]; then
+
+          if [ ${#TAGS[@]} -eq 0 ]
+
+          then
+
             VERSION="latest"
+
           else
+
             VERSION=${TAGS[0]}
+
           fi
 
+
+
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "URL=https://backend-cart-order-service-q6qh.onrender.com" >> $GITHUB_ENV
 
-          echo "🚀 Deploying Version: $VERSION"
 
-      # =========================
-      # 🚀 Trigger Render Deploy
-      # =========================
+          echo "COMMIT=${GITHUB_SHA}" >> $GITHUB_ENV
+
+
+          echo "BRANCH=main" >> $GITHUB_ENV
+
+
+
+          echo "DEPLOY_TIME_UTC=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_ENV
+
+
+          echo "DEPLOY_TIME_IST=$(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S IST')" >> $GITHUB_ENV
+
+
+
+          echo "SERVICE_URL=https://backend-cart-order-service-q6qh.onrender.com" >> $GITHUB_ENV
+
+
+
+          echo "🚀 Version: $VERSION"
+
+
+
+
+      # =====================================================
+      # 🚀 RENDER DEPLOY
+      # =====================================================
+
       - name: Trigger Render Deploy
+
         run: |
-          echo "🚀 Triggering Render..."
+
+
+          echo "🚀 Triggering Render Deployment..."
+
+
           curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
 
-      # =========================
-      # ⏳ Wait for warmup
-      # =========================
-      - name: Initial Wait
-        run: sleep 30
 
-      # =========================
-      # 🧪 SMART HEALTH CHECK (RETRY LOGIC)
-      # =========================
-      - name: Health Check (Retry Safe)
+
+
+      # =====================================================
+      # ⏳ WAIT
+      # =====================================================
+
+      - name: Wait For Startup
+
         run: |
-          echo "🔍 Starting health check..."
 
-          for i in {1..10}; do
-            echo "Attempt $i..."
 
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" $URL)
+          echo "Waiting for application startup..."
 
-            echo "HTTP STATUS: $STATUS"
 
-            if [ "$STATUS" = "200" ]; then
-              echo "🟢 Cart is UP and Running 🚀"
+          sleep 30
+
+
+
+
+      # =====================================================
+      # ❤️ HEALTH CHECK
+      # =====================================================
+
+      - name: Health Check
+
+
+        run: |
+
+
+          echo "🔍 Checking Cart Service Health..."
+
+
+          for i in {1..10}
+
+          do
+
+
+            STATUS=$(curl -s \
+            -o /dev/null \
+            -w "%{http_code}" \
+            "${{ secrets.APPLICATION_HEALTH_URL }}")
+
+
+            echo "Attempt $i → HTTP $STATUS"
+
+
+
+            if [ "$STATUS" = "200" ]
+
+            then
+
+
+              echo "🟢 Cart Service Healthy"
+
+              echo "DEPLOY_STATUS=SUCCESS" >> $GITHUB_ENV
+
               exit 0
+
+
             fi
 
-            echo "⏳ Not ready yet... waiting 10s"
+
+
             sleep 10
+
+
           done
 
-          echo "🔴 Service failed after retries"
+
+
+          echo "DEPLOY_STATUS=FAILED" >> $GITHUB_ENV
+
+
+          echo "🔴 Health check failed"
+
+
           exit 1
 
-      # =========================
+
+
+
+
+      # =====================================================
       # 📧 SUCCESS EMAIL
-      # =========================
-      - name: 📧 Email Success
+      # =====================================================
+
+      - name: 📧 Deployment Success Email
+
+
         if: success()
+
+
         uses: dawidd6/action-send-mail@v3
+
+
         with:
+
+
           server_address: smtp.gmail.com
+
+
           server_port: 587
+
+
           username: ${{ secrets.MAIL_USERNAME_MAIN }}
+
+
           password: ${{ secrets.MAIL_PASSWORD_MAIN }}
-          subject: "🚀 Render CD SUCCESS - ${{ env.VERSION }}"
+
+
+          subject: "🚀 CD SUCCESS | Cart Order Service ${{ env.VERSION }}"
+
+
           to: ${{ secrets.MAIL_USERNAME_MAIN }}
+
+
           cc: ${{ secrets.MAIL_TO_CC_MAIN }}
+
+
           from: ${{ secrets.MAIL_USERNAME_MAIN }}
+
+
+
           body: |
-            🚀 Render Deployment SUCCESS
 
-            🏷️ Version: ${{ env.VERSION }}
-            🌐 URL: ${{ env.URL }}
 
-            🟢 Service is healthy and responding
-            🚀 Deployment completed successfully for Cart Service
+            🚀 DEPLOYMENT SUCCESS
 
-      # =========================
+
+            Service:
+            Cart Order Service
+
+
+            URL:
+            ${{ env.SERVICE_URL }}
+
+
+            Version:
+            ${{ env.VERSION }}
+
+
+            Commit:
+            ${{ env.COMMIT }}
+
+
+            Branch:
+            ${{ env.BRANCH }}
+
+
+            Trigger:
+            ${{ github.event_name }}
+
+
+            Triggered By:
+            ${{ github.actor }}
+
+
+            Deploy Time UTC:
+            ${{ env.DEPLOY_TIME_UTC }}
+
+
+            Deploy Time IST:
+            ${{ env.DEPLOY_TIME_IST }}
+
+
+            Health:
+            ${{ env.DEPLOY_STATUS }}
+
+
+
+
+
+
+      # =====================================================
       # ❌ FAILURE EMAIL
-      # =========================
-      - name: ❌ Email Failure
+      # =====================================================
+
+      - name: ❌ Deployment Failure Email
+
+
         if: failure()
+
+
         uses: dawidd6/action-send-mail@v3
+
+
         with:
+
+
           server_address: smtp.gmail.com
+
+
           server_port: 587
+
+
           username: ${{ secrets.MAIL_USERNAME_MAIN }}
+
+
           password: ${{ secrets.MAIL_PASSWORD_MAIN }}
-          subject: "🚨 Render CD FAILED - ${{ env.VERSION }}"
+
+
+
+          subject: "🚨 CD FAILED | Cart Order Service"
+
+
+
           to: ${{ secrets.MAIL_USERNAME_MAIN }}
+
+
           cc: ${{ secrets.MAIL_TO_CC_MAIN }}
+
+
           from: ${{ secrets.MAIL_USERNAME_MAIN }}
+
+
+
           body: |
-            🚨 Render Deployment FAILED
 
-            🏷️ Version: ${{ env.VERSION }}
-            🌐 URL: ${{ env.URL }}
 
-            ❌ Health check did not pass after retries
-            🔧 Check GitHub Actions logs immediately 
+            🚨 DEPLOYMENT FAILED
+
+
+            Service:
+            Cart Order Service
+
+
+            Version:
+            ${{ env.VERSION }}
+
+
+            Commit:
+            ${{ github.sha }}
+
+
+            Branch:
+            ${{ env.BRANCH }}
+
+
+            Trigger:
+            ${{ github.event_name }}
+
+
+            Please check:
+
+            ❌ GitHub Actions logs
+
+            ❌ Render logs
+
+            ❌ /health endpoint
