@@ -13,3 +13,6 @@ venv/
 .gitignore
 
 logs/
+
+# Ignore this folder
+Enhancements and Practice folder/
