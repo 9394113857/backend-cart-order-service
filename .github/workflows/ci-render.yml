@@ -1,108 +1,277 @@
-name: CI - Backend Cart Service
+# =====================================================
+# 🚀 CI - Backend Cart Order Service (FINAL PRODUCTION)
+# =====================================================
+
+name: 🚀 CI - Backend Cart Order Service Render
+
 
 on:
+
   push:
+
     branches:
       - "**"
+
     tags:
       - "v*"
 
+
+  pull_request:
+
+    branches:
+      - "**"
+
+
+  workflow_dispatch:
+
+
+
 jobs:
-  build:
+
+
+# =====================================================
+# 🧪 TEST JOB
+# =====================================================
+
+  test:
+
+
+    name: 🧪 Test Cart Service
+
     runs-on: ubuntu-latest
+
 
     steps:
 
-      # ====================================
-      # Checkout
-      # ====================================
-      - name: Checkout
-        uses: actions/checkout@v3
 
-      # ====================================
-      # Setup Python
-      # ====================================
+      - name: Checkout
+
+        uses: actions/checkout@v4
+
+
+
       - name: Setup Python
-        uses: actions/setup-python@v4
+
+        uses: actions/setup-python@v5
+
         with:
+
           python-version: "3.11"
 
-      # ====================================
-      # Install Dependencies
-      # ====================================
+
+
       - name: Install Dependencies
+
         run: |
+
+          python -m pip install --upgrade pip
+
           pip install -r requirements.txt
+
           pip install pytest
 
-      # ====================================
-      # Run Tests
-      # ====================================
+
+
       - name: Run Tests
+
         run: |
+
           PYTHONPATH=. pytest -v
 
-      # ====================================
-      # Set Version
-      # ====================================
-      - name: Set Version
-        run: |
-          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/}
-            BRANCH="main"
-          else
-            VERSION=dev-${GITHUB_SHA}
-            BRANCH=${GITHUB_REF#refs/heads/}
-          fi
 
-          echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
-          echo "APP_BRANCH=$BRANCH" >> $GITHUB_ENV
 
-          echo "Version: $VERSION"
-          echo "Branch : $BRANCH"
+      # =====================================
+      # CI SUCCESS MAIL
+      # =====================================
 
-      # ====================================
-      # Docker Login
-      # ====================================
+      - name: 📧 CI Success Email
+
+        if: success()
+
+        uses: dawidd6/action-send-mail@v3
+
+        with:
+
+          server_address: smtp.gmail.com
+
+          server_port: 465
+
+          secure: true
+
+          username: ${{ secrets.MAIL_USERNAME }}
+
+          password: ${{ secrets.MAIL_PASSWORD }}
+
+          subject: "🚀 CI SUCCESS - Backend Cart Order Service"
+
+          to: ${{ secrets.MAIL_TO }}
+
+          cc: ${{ secrets.MAIL_CC }}
+
+          from: Backend Cart Order Service <${{ secrets.MAIL_USERNAME }}>
+
+
+          body: |
+
+            🚀 CI SUCCESS
+
+            Service:
+            Backend Cart Order Service
+
+            Repository:
+            ${{ github.repository }}
+
+            Commit:
+            ${{ github.sha }}
+
+            Branch:
+            ${{ github.ref }}
+
+            Status:
+            Tests Passed
+
+
+
+      - name: ❌ CI Failure Email
+
+        if: failure()
+
+        uses: dawidd6/action-send-mail@v3
+
+        with:
+
+          server_address: smtp.gmail.com
+
+          server_port: 465
+
+          secure: true
+
+          username: ${{ secrets.MAIL_USERNAME }}
+
+          password: ${{ secrets.MAIL_PASSWORD }}
+
+          subject: "🚨 CI FAILED - Backend Cart Order Service"
+
+          to: ${{ secrets.MAIL_TO }}
+
+          cc: ${{ secrets.MAIL_CC }}
+
+          from: Backend Cart Order Service <${{ secrets.MAIL_USERNAME }}>
+
+
+          body: |
+
+            🚨 CI FAILED
+
+            Repository:
+            ${{ github.repository }}
+
+            Commit:
+            ${{ github.sha }}
+
+            Check GitHub Actions logs.
+
+
+
+# =====================================================
+# 🐳 DOCKER RELEASE ONLY TAGS
+# =====================================================
+
+  docker-release:
+
+
+    name: 🐳 Docker Release
+
+
+    needs: test
+
+
+    if: startsWith(github.ref,'refs/tags/')
+
+
+    runs-on: ubuntu-latest
+
+
+
+    steps:
+
+
+      - name: Checkout
+
+        uses: actions/checkout@v4
+
+
+
       - name: Docker Login
+
         run: |
+
           echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login \
           -u "${{ secrets.DOCKERHUB_USERNAME }}" \
           --password-stdin
 
-      # ====================================
-      # Build Docker Image
-      # ====================================
-      - name: Build Image
+
+
+      - name: Set Metadata
+
         run: |
+
+          VERSION=${GITHUB_REF#refs/tags/}
+
+          echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
+
+          echo "APP_BRANCH=main" >> $GITHUB_ENV
+
+
+
+      - name: Generate Build Info
+
+        run: |
+
+          cat > build_info.json <<EOF
+
+          {
+            "version": "${APP_VERSION}",
+            "commit": "${GITHUB_SHA}",
+            "branch": "${APP_BRANCH}",
+            "build_time_utc": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')",
+            "build_time_ist": "$(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S IST')"
+          }
+
+          EOF
+
+
+
+      - name: Build Docker Image
+
+        run: |
+
           docker build \
-            --build-arg APP_VERSION=${{ env.APP_VERSION }} \
-            --build-arg APP_COMMIT=${{ github.sha }} \
-            --build-arg APP_BRANCH=${{ env.APP_BRANCH }} \
-            -t pythoncodelife/backend-cart-order-service:${{ env.APP_VERSION }} \
-            -t pythoncodelife/backend-cart-order-service:latest \
-            .
+          --build-arg APP_VERSION=${APP_VERSION} \
+          --build-arg APP_COMMIT=${GITHUB_SHA} \
+          --build-arg APP_BRANCH=${APP_BRANCH} \
+          -t ${{ secrets.DOCKERHUB_USERNAME }}/backend-cart-order-service:${APP_VERSION} \
+          .
 
-      # ====================================
-      # Push Docker Images
-      # ====================================
-      - name: Push Image
-        run: |
-          docker push pythoncodelife/backend-cart-order-service:${{ env.APP_VERSION }}
-          docker push pythoncodelife/backend-cart-order-service:latest
 
-      # ====================================
-      # Build Summary
-      # ====================================
-      - name: Build Summary
+
+      - name: Push Version Image
+
         run: |
-          echo "================================="
-          echo "Build Completed Successfully"
-          echo "================================="
-          echo "Version : ${{ env.APP_VERSION }}"
-          echo "Branch  : ${{ env.APP_BRANCH }}"
-          echo "Commit  : ${{ github.sha }}"
-          echo "Docker Images Pushed:"
-          echo "pythoncodelife/backend-cart-order-service:${{ env.APP_VERSION }}"
-          echo "pythoncodelife/backend-cart-order-service:latest"
-          echo "================================="
+
+          docker push \
+          ${{ secrets.DOCKERHUB_USERNAME }}/backend-cart-order-service:${APP_VERSION}
+
+
+
+      - name: Push Latest
+
+        run: |
+
+          docker tag \
+          ${{ secrets.DOCKERHUB_USERNAME }}/backend-cart-order-service:${APP_VERSION} \
+          ${{ secrets.DOCKERHUB_USERNAME }}/backend-cart-order-service:latest
+
+
+          docker push \
+          ${{ secrets.DOCKERHUB_USERNAME }}/backend-cart-order-service:latest
