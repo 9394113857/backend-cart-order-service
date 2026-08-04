@@ -108,7 +108,7 @@ jobs:
 
           cc: ${{ secrets.MAIL_CC }}
 
-          from: ${{ secrets.MAIL_USERNAME }}
+          from: Backend Cart Order Service <${{ secrets.MAIL_USERNAME }}>
 
 
           body: |
@@ -156,7 +156,7 @@ jobs:
 
           cc: ${{ secrets.MAIL_CC }}
 
-          from: ${{ secrets.MAIL_USERNAME }}
+          from: Backend Cart Order Service <${{ secrets.MAIL_USERNAME }}>
 
 
           body: |
