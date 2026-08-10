@@ -4,6 +4,8 @@
 
 name: 🚀 CD - Cart Order Service Render
 
+run-name: 🚀 Deploy ${{ github.event_name }} | ${{ github.ref_name }} | ${{ github.actor }}
+
 
 on:
 
