@@ -163,7 +163,9 @@ jobs:
             "${{ secrets.APPLICATION_HEALTH_URL }}")
 
 
-            echo "Attempt $i → HTTP $STATUS"
+            REMAINING=$((10 - i))
+            
+            echo "❤️ Health Check Attempt $i/10 → HTTP $STATUS | ⏳ Remaining: $REMAINING"
 
 
 
